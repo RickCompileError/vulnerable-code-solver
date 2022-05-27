@@ -1,4 +1,4 @@
-package com.example;
+package demo.src.main.resources;
 
 import java.io.IOException;
 import java.sql.Connection;

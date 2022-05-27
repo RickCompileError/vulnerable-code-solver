@@ -1,4 +1,4 @@
-package com.example;
+package demo.src.main.resources;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;

@@ -1,4 +1,4 @@
-package com.example;
+package demo.src.main.resources;
 
 import java.util.Stack;
 import java.util.stream.Stream;
