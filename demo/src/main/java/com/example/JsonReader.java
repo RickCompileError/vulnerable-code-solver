@@ -26,9 +26,13 @@ public class JsonReader {
                 public void accept(Object obj){
                     JSONObject jsonobj = (JSONObject)obj;
                     String ruleid = jsonobj.getString("ruleId");
+                    String uri = jsonobj.getJSONArray("locations").getJSONObject(0).
+                                            getJSONObject("physicalLocation").getJSONObject("artifactLocation").
+                                            getString("uri");
                     JSONObject region = jsonobj.getJSONArray("locations").getJSONObject(0).
                                             getJSONObject("physicalLocation").getJSONObject("region");
                     Vulnerable vul = new Vulnerable(ruleid,
+                                                    uri,
                                                     region.getInt("startLine"),
                                                     region.getInt("endLine"),
                                                     region.getInt("startColumn"),
