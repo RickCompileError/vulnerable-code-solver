@@ -2,26 +2,36 @@ package com.example;
 
 public class Vulnerable {
 
-    private final String type;
+    private String type;
+    private String file_path;
     private int start_line;
     private int end_line;
     private int start_column;
     private int end_column;
 
-    public Vulnerable(String t){
-        this.type = t;
+    public Vulnerable(String t, String fp){
+        type = t;
+        file_path = fp;
+        start_line = 0;
+        end_line = 0;
+        start_column = 0;
+        end_column = 0;
     }
 
-    public Vulnerable(String type, int sl, int el){
-        this(type);
+    public Vulnerable(String t, String fp, int sl, int el){
+        this(t, fp);
         start_line = sl;
         end_line = el;
     }
 
-    public Vulnerable(String type, int sl, int el, int sc, int ec){
-        this(type, sl, el);
+    public Vulnerable(String t, String fp, int sl, int el, int sc, int ec){
+        this(t, fp, sl, el);
         start_column = sc;
         end_column = ec;
+    }
+
+    public String getFilePath(){
+        return file_path;
     }
 
     public String getType(){
@@ -45,8 +55,8 @@ public class Vulnerable {
     }
 
     public String toString(){
-        return "Type: " + getType() + ", Start Line: " + getStartLine()
-            + ", End Line: " + getEndLine() + ", Start Column: " + getStartColumn()
-            + ", End Column: " + getEndColumn();
+        return "Type: " + getType() + ", File Path: " + getFilePath()
+            + ", Start Line: " + getStartLine() + ", End Line: " + getEndLine()
+            + ", Start Column: " + getStartColumn() + ", End Column: " + getEndColumn();
     }
 }
