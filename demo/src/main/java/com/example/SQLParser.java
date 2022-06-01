@@ -7,6 +7,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.visitor.VoidVisitor;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.body.*;
 import com.github.javaparser.ast.stmt.*;
@@ -20,6 +21,8 @@ import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
+
+import org.apache.taglibs.standard.lang.jstl.StringLiteral;
 
 import javassist.compiler.ast.Variable;
 import javassist.expr.MethodCall;
@@ -64,13 +67,15 @@ public class SQLParser {
             scope_declare_modify = modifyScopeDeclaration(scope_declare_modify);
             printInfo(scope_declare_modify, "After the scope's VariableDeclarationExpr were modified");
 
+            /******* Add the relative Expression of MethodCallExpr's Scope *******/
+
             /******* Modify MethodCallExpr's arguments part *******/
             Expression arg = mce.getArguments().get(0);
             printInfo(arg, "arg");
             VariableDeclarationExpr args_declare_modify = getResolvedVariableDeclarationExpr(arg);
             args_declare_modify = modifyArgsDeclaration(args_declare_modify);
-            VariableDeclarator arg_vde = findVariableDeclarator(arg, arg.toString()); 
-            printInfo(arg_vde, "After the args' VariableDeclarationExpr were modified");
+            // VariableDeclarator arg_vde = findVariableDeclarator(arg, arg.toString()); 
+            printInfo(args_declare_modify, "After the args' VariableDeclarationExpr were modified");
 
         }
     }
@@ -129,9 +134,22 @@ public class SQLParser {
     public static VariableDeclarationExpr modifyArgsDeclaration(VariableDeclarationExpr arg_vde){
         VariableDeclarator arg_vd = arg_vde.getVariable(0);
         BinaryExpr exp = arg_vd.getInitializer().get().toBinaryExpr().get();
-        System.out.println(exp.getChildNodes());
-        printInfo(exp);
-        
+        NodeList<MethodCallExpr> nl_mce = new NodeList<>();
+        NodeList<StringLiteralExpr> nl_sle = new NodeList<>();
+        while (true) {
+            if (exp.getRight() instanceof MethodCallExpr) nl_mce.addFirst((MethodCallExpr)exp.getRight());
+            if (exp.getRight() instanceof StringLiteralExpr) nl_sle.addFirst((StringLiteralExpr)exp.getRight());
+            if (!(exp.getLeft() instanceof BinaryExpr)) break;
+            exp = (BinaryExpr)exp.getLeft();
+        }
+        if (exp.getLeft() instanceof MethodCallExpr) nl_mce.addFirst((MethodCallExpr)exp.getLeft());
+        if (exp.getLeft() instanceof StringLiteralExpr) nl_sle.addFirst((StringLiteralExpr)exp.getLeft());
+        String newString = "";
+        for (StringLiteralExpr sle : nl_sle) newString += sle.asString();
+        newString = newString.replaceAll("\' *\'","?");
+        arg_vd.setInitializer(newString);
+        System.out.println(nl_mce);
+        System.out.println(nl_sle);
         return arg_vde;
     }
 
