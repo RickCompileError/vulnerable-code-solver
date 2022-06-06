@@ -22,8 +22,6 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 
-import org.apache.taglibs.standard.lang.jstl.StringLiteral;
-
 import javassist.compiler.ast.Variable;
 import javassist.expr.MethodCall;
 
@@ -36,11 +34,10 @@ import java.util.List;
 //import java.nio.file.*;
 public class SQLParser {
 
-    private static final String JSON_PATH = System.getProperty("user.dir") + "/demo/snyk.json";
-    private static final String FILE_PATH = System.getProperty("user.dir") + "/demo/src/main/webapp/SQL_Injection_Servlet.java";
+    private static final String Base_Path = System.getProperty("user.dir") + "/demo/src/main/webapp/";
     
     public static void main(String[] args) throws Exception {
-        SnykVulnerable sv = JsonReader.getSnykVulnerable(JSON_PATH);
+        SnykVulnerable sv = JsonReader.getSnykVulnerable(Base_Path + "snyk.json");
         if (sv.containsKey("java/Sqli"))
             sv.get("java/Sqli").forEach(System.out::println);
 
@@ -48,7 +45,9 @@ public class SQLParser {
 
         for (Vulnerable v: sv.get("java/Sqli")){
             /******* Find the Node at Vulnerable line *******/
-            CompilationUnit cu = StaticJavaParser.parse(new FileInputStream(FILE_PATH));
+            /******* Example: result = st.executeQuery(sql) *******/
+            CompilationUnit cu = StaticJavaParser.parse(new FileInputStream(Base_Path + v.getFilePath()));
+            LexicalPreservingPrinter.setup(cu);
             VariableDeclarator vd = findVulnerableNode(v, cu);
             printInfo(vd, "vd");
             if (vd==null){
@@ -57,26 +56,32 @@ public class SQLParser {
             }
 
             /******* Get MethodCallExpr from VariableDeclarator *******/
+            /******* Example: st.executeQuery(sql) *******/
             MethodCallExpr mce = findMethodCallExpr(vd);
             printInfo(mce, "Vulnerable's MethodCallExpr");
 
             /******* Modify MethodCallExpr's Scope part *******/
+            /******* Example: st *******/
             Expression scope = mce.getScope().get();
             printInfo(scope, "scope");
-            VariableDeclarationExpr scope_declare_modify = getResolvedVariableDeclarationExpr(scope);
-            scope_declare_modify = modifyScopeDeclaration(scope_declare_modify);
-            printInfo(scope_declare_modify, "After the scope's VariableDeclarationExpr were modified");
-
-            /******* Add the relative Expression of MethodCallExpr's Scope *******/
+            System.out.println(cu.findAll(AssignExpr.class));
+            VariableDeclarationExpr scope_declare = getResolvedVariableDeclarationExpr(scope);
+            modifyScopeDeclaration(scope_declare);
+            printInfo(scope_declare, "After the scope's VariableDeclarationExpr were modified");
 
             /******* Modify MethodCallExpr's arguments part *******/
+            /******* Example: sql *******/
             Expression arg = mce.getArguments().get(0);
             printInfo(arg, "arg");
-            VariableDeclarationExpr args_declare_modify = getResolvedVariableDeclarationExpr(arg);
-            args_declare_modify = modifyArgsDeclaration(args_declare_modify);
-            // VariableDeclarator arg_vde = findVariableDeclarator(arg, arg.toString()); 
-            printInfo(args_declare_modify, "After the args' VariableDeclarationExpr were modified");
+            VariableDeclarationExpr args_declare = getResolvedVariableDeclarationExpr(arg);
+            NodeList<MethodCallExpr> need_extend_expressions = modifyArgsDeclaration(args_declare);
+            printInfo(args_declare, "After the args' VariableDeclarationExpr were modified");
 
+            /******* Add the relative Expression of MethodCallExpr's Scope *******/
+            /******* Example: st.setString(1, request.getParameter("nametextbox1").toUpperCase()); */
+            addRelativeExpression(vd, need_extend_expressions, scope);
+
+            System.out.println(LexicalPreservingPrinter.print(cu));
         }
     }
     
@@ -130,27 +135,45 @@ public class SQLParser {
         return scope_vde;
     }
 
-    /******* Under Constructing *******/
-    public static VariableDeclarationExpr modifyArgsDeclaration(VariableDeclarationExpr arg_vde){
-        VariableDeclarator arg_vd = arg_vde.getVariable(0);
-        BinaryExpr exp = arg_vd.getInitializer().get().toBinaryExpr().get();
-        NodeList<MethodCallExpr> nl_mce = new NodeList<>();
-        NodeList<StringLiteralExpr> nl_sle = new NodeList<>();
-        while (true) {
-            if (exp.getRight() instanceof MethodCallExpr) nl_mce.addFirst((MethodCallExpr)exp.getRight());
-            if (exp.getRight() instanceof StringLiteralExpr) nl_sle.addFirst((StringLiteralExpr)exp.getRight());
-            if (!(exp.getLeft() instanceof BinaryExpr)) break;
-            exp = (BinaryExpr)exp.getLeft();
+    public static <T extends Node> NodeList<T> getExpressionsInBinaryExpr(BinaryExpr be, Class<T> clazz){
+        NodeList<T> nl = new NodeList<>();
+        while (true){
+            if (clazz.isInstance(be.getRight())) nl.addFirst((T)be.getRight()); 
+            if (!(be.getLeft() instanceof BinaryExpr)) break;
+            be = (BinaryExpr)be.getLeft();
         }
-        if (exp.getLeft() instanceof MethodCallExpr) nl_mce.addFirst((MethodCallExpr)exp.getLeft());
-        if (exp.getLeft() instanceof StringLiteralExpr) nl_sle.addFirst((StringLiteralExpr)exp.getLeft());
+        if (clazz.isInstance(be.getLeft())) nl.addFirst((T)be.getLeft()); 
+        return nl;
+    }
+
+    public static NodeList<MethodCallExpr> modifyArgsDeclaration(VariableDeclarationExpr vde){
+        VariableDeclarator vde_vd = vde.getVariable(0); // get first variable declaration
+        BinaryExpr exp = vde_vd.getInitializer().get().toBinaryExpr().get(); // expression like a+b
+        NodeList<MethodCallExpr> nl_mce = getExpressionsInBinaryExpr(exp, MethodCallExpr.class); // store all method call of a expression
+        NodeList<StringLiteralExpr> nl_sle = getExpressionsInBinaryExpr(exp, StringLiteralExpr.class); // store all string literal of a expression
+        /* build new string of variable declaration */
         String newString = "";
         for (StringLiteralExpr sle : nl_sle) newString += sle.asString();
         newString = newString.replaceAll("\' *\'","?");
-        arg_vd.setInitializer(newString);
-        System.out.println(nl_mce);
-        System.out.println(nl_sle);
-        return arg_vde;
+        vde_vd.setInitializer(new StringLiteralExpr(newString)); // setting new string 
+        return nl_mce;
+    }
+
+    public static void addRelativeExpression(VariableDeclarator vd, NodeList<MethodCallExpr> nlmce, Expression scope) {
+        BlockStmt bs = vd.findAncestor(BlockStmt.class).get();
+        while (!bs.containsWithinRange(getResolvedVariableDeclarationExpr(scope))) bs = bs.findAncestor(BlockStmt.class).get();
+        NodeList<Statement> nls = bs.getStatements();
+        Statement vd_ancestor = vd.findAncestor(Statement.class).get();
+        for (int i=1;i<=nlmce.size();i++){
+            MethodCallExpr new_mce = new MethodCallExpr();
+            NodeList<Expression> new_nle = new NodeList<>();
+            new_nle.add(new IntegerLiteralExpr(String.valueOf(i)));
+            new_nle.add(nlmce.get(i-1));
+            new_mce.setName("setString")
+                    .setScope(scope)
+                    .setArguments(new_nle);
+            nls.addBefore(new ExpressionStmt(new_mce), vd_ancestor);
+        }
     }
 
     public static <T extends Node> void printInfo(T node, String name){
@@ -167,3 +190,8 @@ public class SQLParser {
     }
 
 }
+
+/* Link
+   NodeWithStatements<N extends Node>
+   https://www.javadoc.io/static/com.github.javaparser/javaparser-core/3.24.2/com/github/javaparser/ast/nodeTypes/NodeWithStatements.html#addStatement(com.github.javaparser.ast.expr.Expression)
+   https://github.com/javaparser/javaparser/issues/945 */
