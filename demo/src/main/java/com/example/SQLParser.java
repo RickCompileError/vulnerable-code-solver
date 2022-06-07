@@ -27,6 +27,8 @@ import javassist.expr.MethodCall;
 
 import java.io.*;
 import java.io.FileInputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.PreparedStatement;
 import java.util.*;  
 import java.util.ArrayList;
@@ -81,7 +83,7 @@ public class SQLParser {
             /******* Example: st.setString(1, request.getParameter("nametextbox1").toUpperCase()); */
             addRelativeExpression(vd, need_extend_expressions, scope);
 
-            System.out.println(LexicalPreservingPrinter.print(cu));
+            Save("new_"+v.getFilePath(), LexicalPreservingPrinter.print(cu));
         }
     }
     
@@ -187,6 +189,15 @@ public class SQLParser {
 
     public static void printError(String msg){
         System.out.println(msg);
+    }
+
+    public static void Save(String file_name, String output){
+        Path path = Path.of(Base_Path+file_name);
+        try{
+            Files.writeString(path, output);
+        } catch (IOException ioe){
+            ioe.printStackTrace();
+        }
     }
 
 }
