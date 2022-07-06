@@ -14,9 +14,15 @@ import java.nio.file.Path;
 import org.json.*;
 
 public class JsonReader {
-    public static SnykVulnerable getSnykVulnerable(String file_path){
+    public static SnykVulnerable getSnykVulnerable(Path file_path){
         SnykVulnerable sv = new SnykVulnerable();
-        String content = tryReadString(Path.of(file_path));
+        // String content = tryReadString(Path.of(file_path));
+        String content = null;
+        try{
+            content = Files.readString(file_path, StandardCharsets.UTF_8);
+        }catch (IOException ioe){
+            System.out.println(ioe.getStackTrace());
+        }
         JSONArray parser = new JSONObject(content).
                                 getJSONArray("runs").
                                 getJSONObject(0).
@@ -43,6 +49,11 @@ public class JsonReader {
         return sv;
     }
 
+    public static SnykVulnerable getSnykVulnerable(String file_path){
+        return getSnykVulnerable(Path.of(file_path));
+    }
+
+    // BUGS : the function may not work
     private static String tryReadString(Path path){
         SortedMap<String, Charset> charsets = Charset.availableCharsets();
         for (String i: charsets.keySet()){

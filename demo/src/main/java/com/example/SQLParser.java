@@ -12,20 +12,24 @@ import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
 public class SQLParser {
 
     private static final String Base_Path = System.getProperty("user.dir") + "/demo/src/main/webapp/";
     
     public static void main(String[] args) throws Exception {
-        SnykVulnerable sv = JsonReader.getSnykVulnerable(Base_Path + "snyk.json");
+        Path path = getJSON();
+        SnykVulnerable sv = JsonReader.getSnykVulnerable(path);
+
+        // Print if json have any sql injection vulnerable
         if (sv.containsKey("java/Sqli"))
             sv.get("java/Sqli").forEach(System.out::println);
 
         setParser();
 
         for (Vulnerable v: sv.get("java/Sqli")){
-            /******* Find the Node at Vulnerable line *******/
-            /******* Example: result = st.executeQuery(sql) *******/
             CompilationUnit cu = StaticJavaParser.parse(new FileInputStream(Base_Path + v.getFilePath()));
             LexicalPreservingPrinter.setup(cu);
 
@@ -37,6 +41,20 @@ public class SQLParser {
         }
     }
     
+    /*
+     * Get scanning json file by JFileChooser
+     */
+    public static Path getJSON(){
+        JFileChooser chooser = new JFileChooser();
+        chooser.setCurrentDirectory(new File(Base_Path));
+        chooser.setFileFilter(new FileNameExtensionFilter("JSON File", "json"));
+        int returnValue = chooser.showOpenDialog(null);
+        if (returnValue==JFileChooser.APPROVE_OPTION){
+            return chooser.getSelectedFile().toPath();
+        }
+        return null;
+    }
+
     public static void setParser() {
         StaticJavaParser.getConfiguration().setAttributeComments(false);
         JavaSymbolSolver jss = new JavaSymbolSolver(new CombinedTypeSolver(new ReflectionTypeSolver()));
