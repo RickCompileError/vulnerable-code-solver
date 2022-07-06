@@ -50,7 +50,7 @@ public class SQLInjectionSolver extends Solver{
         MethodCallExpr occur_method_call = occur_node.findAncestor(MethodCallExpr.class).get();
 
         Expression method_scope = occur_method_call.getScope().get();
-        /* Issue: is argument only one? */
+        // FIXME : argument may not only one
         Expression method_args = occur_method_call.getArguments().get(0);
         modifyScopeContent(method_scope);
         modifyArgsContent(method_args);

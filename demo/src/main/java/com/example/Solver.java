@@ -47,8 +47,7 @@ public abstract class Solver{
         if (!(node instanceof NameExpr)) return null;
         AssignExpr ae = null;
         while (true){
-            /* Issue: the order problem, AssignExpr appear after main node
-             * seem to be legal if in ForExpr */
+            // FIXME : the order problem, AssignExpr appear after main node seem to be legal if in ForExpr
             for (AssignExpr i: node.findAll(AssignExpr.class)){
                 if (i.getTarget().toString().contains(keyword)) ae = i;
             }
