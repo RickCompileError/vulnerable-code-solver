@@ -19,7 +19,8 @@ public class JsonReader {
         // String content = tryReadString(Path.of(file_path));
         String content = null;
         try{
-            content = Files.readString(file_path, StandardCharsets.UTF_8);
+            // BUG : different encoding problems
+            content = Files.readString(file_path, StandardCharsets.UTF_16);
         }catch (IOException ioe){
             System.out.println(ioe.getStackTrace());
         }
@@ -31,13 +32,13 @@ public class JsonReader {
             public void accept(Object obj){
                 JSONObject jsonobj = (JSONObject)obj;
                 String ruleid = jsonobj.getString("ruleId");
-                String uri = jsonobj.getJSONArray("locations").getJSONObject(0).
+                Path uri = Path.of(jsonobj.getJSONArray("locations").getJSONObject(0).
                                         getJSONObject("physicalLocation").getJSONObject("artifactLocation").
-                                        getString("uri");
+                                        getString("uri"));
                 JSONObject region = jsonobj.getJSONArray("locations").getJSONObject(0).
                                         getJSONObject("physicalLocation").getJSONObject("region");
                 Vulnerable vul = new Vulnerable(ruleid,
-                                                uri,
+                                                uri.getFileName().toString(),
                                                 region.getInt("startLine"),
                                                 region.getInt("endLine"),
                                                 region.getInt("startColumn"),
@@ -53,7 +54,7 @@ public class JsonReader {
         return getSnykVulnerable(Path.of(file_path));
     }
 
-    // BUGS : the function may not work
+    // BUG : the function may not work
     private static String tryReadString(Path path){
         SortedMap<String, Charset> charsets = Charset.availableCharsets();
         for (String i: charsets.keySet()){
