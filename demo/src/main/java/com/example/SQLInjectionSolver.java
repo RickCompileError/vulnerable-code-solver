@@ -1,10 +1,16 @@
 package com.example;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.github.javaparser.Range;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.comments.BlockComment;
+import com.github.javaparser.ast.comments.Comment;
+import com.github.javaparser.ast.comments.LineComment;
 import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.Expression;
@@ -12,11 +18,17 @@ import com.github.javaparser.ast.expr.IntegerLiteralExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.SimpleName;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
+import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.Statement;
+import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 
 public class SQLInjectionSolver extends Solver{
+
+    public SQLInjectionSolver(){
+        super();
+    }
 
     public SQLInjectionSolver(Vulnerable vulnerable, CompilationUnit cu){
         super(vulnerable, cu);
@@ -54,6 +66,7 @@ public class SQLInjectionSolver extends Solver{
         Expression method_args = occur_method_call.getArguments().get(0);
         modifyScopeContent(method_scope);
         modifyArgsContent(method_args);
+        setStringBeforeStatement(method_scope, method_args);
     }
 
     private void modifyScopeContent(Expression e){
@@ -71,42 +84,91 @@ public class SQLInjectionSolver extends Solver{
                         ?getVariableDeclarator(e).getInitializer().get()
                         :getAssignExpr(e, e.toString()).getValue())
                         .toBinaryExpr().get();
-        // add request expression
-        NodeList<MethodCallExpr> nl_mce = getExpressionsInBinaryExpr(be, MethodCallExpr.class); // store all method call of a expression
-        BlockStmt bs = occur_node.findAncestor(BlockStmt.class).get();
-        NodeList<Statement> nl_s = bs.getStatements();
+
+        NodeList<Expression> nl = new NodeList<>();
+        List<BinaryExpr.Operator> ls = new ArrayList<>();
+        BinaryExprReader.read(be, nl, ls);
+        addRequestExpr1(nl, ls);
+        modifySqlRequest1(be, nl, ls);
+    }
+    
+    // add request expression
+    private void addRequestExpr1(NodeList<Expression> nl, List<BinaryExpr.Operator> ls){
+        // get the NodeList from finding BlockStmt and the statement of the occur_node
+        NodeList<Statement> nl_s = occur_node.findAncestor(BlockStmt.class).get().getStatements();
         Statement s = occur_node.findAncestor(Statement.class).get();
-        for (int i=1;i<=nl_mce.size();i++){
-            MethodCallExpr new_mce = new MethodCallExpr();
-            NodeList<Expression> new_nle = new NodeList<>();
-            new_mce.setName("setString")
-                    .setScope(occur_node.findAncestor(MethodCallExpr.class).get().getScope().get())
-                    .setArguments(new NodeList<Expression>(new IntegerLiteralExpr(String.valueOf(i)),
-                                                            nl_mce.get(i-1)));
-            nl_s.addBefore(new ExpressionStmt(new_mce), s);
+        // the statement will add before occur_node statement and the most left first adding
+        int count_expression = 1;
+        for (int i=0, j=0, sz=nl.size();i<sz;i++){
+            if (nl.get(i) instanceof StringLiteralExpr){
+                if (i==j){
+                    j++;
+                    continue;
+                }
+                Expression exp = null;
+                if (i-j>1){
+                    BinaryExpr be = new BinaryExpr();
+                    be.setLeft(nl.get(j));
+                    while (j<i){
+                        if (be.getRight()==null){
+                            be.setOperator(ls.get(j-1));
+                            be.setRight(nl.get(j++));
+                        }else{
+                            be = new BinaryExpr(be, nl.get(j), ls.get((j++)-1));
+                        }
+                    }
+                    exp = be;
+                }
+                else exp = nl.get(j++);
+                nl_s.addBefore(
+                    new ExpressionStmt(
+                        new MethodCallExpr(
+                            occur_node.findAncestor(MethodCallExpr.class).get().getScope().get(),
+                            "setString",
+                            new NodeList<Expression>(new IntegerLiteralExpr(String.valueOf(count_expression)),exp)
+                        )
+                    ),
+                    s
+                );
+            }
         }
-        // replace sql reqeust to '?'
-        NodeList<StringLiteralExpr> nl_sle = getExpressionsInBinaryExpr(be, StringLiteralExpr.class); // store all string literal of a expression
-        String newString = "";
-        for (StringLiteralExpr sle : nl_sle) newString += sle.asString();
-        newString = newString.replaceAll("\' *\'","?");
-        Node be_e = be.getParentNode().get();
-        // setting new string 
-        if (be_e instanceof VariableDeclarator)
-            ((VariableDeclarator)be_e).setInitializer(new StringLiteralExpr(newString)); 
-        else if(be_e instanceof AssignExpr)
-            ((AssignExpr)be_e).setValue(new StringLiteralExpr(newString));
     }
 
-    private <T extends Node> NodeList<T> getExpressionsInBinaryExpr(BinaryExpr be, Class<T> clazz){
-        NodeList<T> nl = new NodeList<>();
-        while (true){
-            if (clazz.isInstance(be.getRight())) nl.addFirst((T)be.getRight()); 
-            if (!(be.getLeft() instanceof BinaryExpr)) break;
-            be = (BinaryExpr)be.getLeft();
+    private void modifySqlRequest1(BinaryExpr be, NodeList<Expression> nl, List<BinaryExpr.Operator> ls){
+        // replace sql reqeust to '?'
+        // TODO : the processing have a precondition that
+        //        sql instruction is made up of ['String'+'Node'(1:)](1:)+'String'
+        String newString = "";
+        for (int i=0, sz=nl.size();i<sz;i++){
+            Expression exp = nl.get(i);
+            if (exp instanceof StringLiteralExpr) newString += exp.asStringLiteralExpr().asString();
+            else if (i-1>=0 && nl.get(i-1) instanceof StringLiteralExpr) newString += "?";
         }
-        if (clazz.isInstance(be.getLeft())) nl.addFirst((T)be.getLeft()); 
-        return nl;
+        // remove '' ""
+        newString = newString.replaceAll("[\'\"]\\?[\'\"]","?");
+        // setting new string 
+        Node sql = be.getParentNode().get();
+        if (sql instanceof VariableDeclarator)
+            ((VariableDeclarator)sql).setInitializer(new StringLiteralExpr(newString)); 
+        else if(sql instanceof AssignExpr)
+            ((AssignExpr)sql).setValue(new StringLiteralExpr(newString));
+    }
+
+    private void setStringBeforeStatement(Expression scope, Expression args){
+        ExpressionStmt scope_vd = getVariableDeclarator(scope).findAncestor(ExpressionStmt.class).get();
+        ExpressionStmt args_vd = getVariableDeclarator(args).findAncestor(ExpressionStmt.class).get();
+        Comment comment = null;
+        if (args_vd.getComment().isPresent()) comment = args_vd.getComment().get();
+        if (comment!=null) comment.remove();
+        if (scope_vd.getRange().get().isAfter(args_vd.getRange().get().begin)) return;
+        Node node = occur_node;
+        while (node.findAncestor(BlockStmt.class).isPresent()){
+            node = node.findAncestor(BlockStmt.class).get();
+            ((BlockStmt)node).remove(args_vd);
+            if (node.containsWithinRange(scope_vd)) break;
+        }
+        ((BlockStmt)node).getStatements().addBefore(args_vd, scope_vd);
+        if (comment!=null) args_vd.setComment(comment);
     }
 
 }
