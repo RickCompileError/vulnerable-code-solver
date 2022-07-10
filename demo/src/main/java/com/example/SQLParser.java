@@ -11,6 +11,9 @@ import java.io.*;
 import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -21,15 +24,14 @@ public class SQLParser {
     
     public static void main(String[] args) throws Exception {
         Path path = getJSON();
+        System.out.println("Get JSON File: " + path);
         SnykVulnerable sv = JsonReader.getSnykVulnerable(path);
-
-        // Print if json have any sql injection vulnerable
-        if (sv.containsKey("java/Sqli"))
-            sv.get("java/Sqli").forEach(System.out::println);
 
         setParser();
 
+        removePrevFile();
         for (Vulnerable v: sv.get("java/Sqli")){
+            System.out.println("Start solving\n\t"+v);
             CompilationUnit cu = StaticJavaParser.parse(new FileInputStream(Base_Path + v.getFilePath()));
             LexicalPreservingPrinter.setup(cu);
 
@@ -37,7 +39,9 @@ public class SQLParser {
             solver.findVulnerableNode();
             solver.solve();
 
-            Save("new_"+v.getFilePath(), LexicalPreservingPrinter.print(cu));
+            int ver = getVersionNumber(v.getFilePath());
+            Save("n"+String.valueOf(ver)+"_"+v.getFilePath(), LexicalPreservingPrinter.print(cu));
+            System.out.println("Done");
         }
     }
     
@@ -56,9 +60,25 @@ public class SQLParser {
     }
 
     public static void setParser() {
-        StaticJavaParser.getConfiguration().setAttributeComments(false);
+        StaticJavaParser.getConfiguration().setAttributeComments(true);
         JavaSymbolSolver jss = new JavaSymbolSolver(new CombinedTypeSolver(new ReflectionTypeSolver()));
         StaticJavaParser.getConfiguration().setSymbolResolver(jss);
+    }
+
+    public static void removePrevFile(){
+        try{
+            for (Path path: Files.newDirectoryStream(Path.of(Base_Path))){
+                if (Pattern.matches("n\\d+_.*", path.getFileName().toString())) Files.delete(path);
+            }
+        }catch (IOException ioe){
+            ioe.printStackTrace();
+        }
+    }
+
+    public static int getVersionNumber(String file_name){
+        int v = 1;
+        while (Files.exists(Path.of(Base_Path + "n" + String.valueOf(v) + "_" + file_name))) v++;
+        return v;
     }
 
     public static void Save(String file_name, String output){
