@@ -7,6 +7,7 @@ import com.github.javaparser.Range;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.comments.BlockComment;
 import com.github.javaparser.ast.comments.Comment;
@@ -64,19 +65,20 @@ public class SQLInjectionSolver extends Solver{
         Expression method_scope = occur_method_call.getScope().get();
         // FIXME : argument may not only one
         Expression method_args = occur_method_call.getArguments().get(0);
-        modifyScopeContent(method_scope);
-        modifyArgsContent(method_args);
         setStringBeforeStatement(method_scope, method_args);
+        modifyScopeContent(method_scope, method_args.toString());
+        modifyArgsContent(method_args);
+        occur_method_call.remove(method_args);
     }
 
-    private void modifyScopeContent(Expression e){
+    private void modifyScopeContent(Expression e, String args){
         VariableDeclarator vd = getVariableDeclarator(e);
         vd.setType("PreparedStatement");
         MethodCallExpr mce = (MethodCallExpr)(vd.getInitializer().isPresent()
                                             ?vd.getInitializer().get()
                                             :getAssignExpr(e, "createStatement").getValue());
         mce.setName("prepareStatement");
-        mce.addArgument("sql");
+        mce.addArgument(args);
     }
 
     private void modifyArgsContent(Expression e){
@@ -88,12 +90,12 @@ public class SQLInjectionSolver extends Solver{
         NodeList<Expression> nl = new NodeList<>();
         List<BinaryExpr.Operator> ls = new ArrayList<>();
         BinaryExprReader.read(be, nl, ls);
-        addRequestExpr1(nl, ls);
-        modifySqlRequest1(be, nl, ls);
+        addRequestExpr(nl, ls);
+        modifySqlRequest(be, nl, ls);
     }
     
     // add request expression
-    private void addRequestExpr1(NodeList<Expression> nl, List<BinaryExpr.Operator> ls){
+    private void addRequestExpr(NodeList<Expression> nl, List<BinaryExpr.Operator> ls){
         // get the NodeList from finding BlockStmt and the statement of the occur_node
         NodeList<Statement> nl_s = occur_node.findAncestor(BlockStmt.class).get().getStatements();
         Statement s = occur_node.findAncestor(Statement.class).get();
@@ -134,7 +136,7 @@ public class SQLInjectionSolver extends Solver{
         }
     }
 
-    private void modifySqlRequest1(BinaryExpr be, NodeList<Expression> nl, List<BinaryExpr.Operator> ls){
+    private void modifySqlRequest(BinaryExpr be, NodeList<Expression> nl, List<BinaryExpr.Operator> ls){
         // replace sql reqeust to '?'
         // TODO : the processing have a precondition that
         //        sql instruction is made up of ['String'+'Node'(1:)](1:)+'String'
@@ -157,10 +159,12 @@ public class SQLInjectionSolver extends Solver{
     private void setStringBeforeStatement(Expression scope, Expression args){
         ExpressionStmt scope_vd = getVariableDeclarator(scope).findAncestor(ExpressionStmt.class).get();
         ExpressionStmt args_vd = getVariableDeclarator(args).findAncestor(ExpressionStmt.class).get();
-        Comment comment = null;
-        if (args_vd.getComment().isPresent()) comment = args_vd.getComment().get();
-        if (comment!=null) comment.remove();
         if (scope_vd.getRange().get().isAfter(args_vd.getRange().get().begin)) return;
+        Comment comment = null;
+        if (args_vd.getComment().isPresent()){
+            comment = args_vd.getComment().get();
+            args_vd.setComment(null);
+        }
         Node node = occur_node;
         while (node.findAncestor(BlockStmt.class).isPresent()){
             node = node.findAncestor(BlockStmt.class).get();
@@ -168,7 +172,7 @@ public class SQLInjectionSolver extends Solver{
             if (node.containsWithinRange(scope_vd)) break;
         }
         ((BlockStmt)node).getStatements().addBefore(args_vd, scope_vd);
-        if (comment!=null) args_vd.setComment(comment);
+        args_vd.setComment(comment);
     }
 
 }
