@@ -1,2 +1,4 @@
 *.class
 *.lst
+demo/src/main/webapp/*
+demo/target/*
