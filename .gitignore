@@ -1,5 +1,5 @@
 *.class
 *.lst
 src/main/webapp/*
-src/target/*
+target/*
 src/test/*
