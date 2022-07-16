@@ -20,7 +20,7 @@ public class JsonReader {
         String content = null;
         try{
             // BUG : different encoding problems
-            content = Files.readString(file_path, StandardCharsets.UTF_16);
+            content = Files.readString(file_path, StandardCharsets.UTF_8);
         }catch (IOException ioe){
             System.out.println(ioe.getStackTrace());
         }

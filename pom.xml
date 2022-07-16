@@ -4,9 +4,9 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.example</groupId>
-  <artifactId>demo</artifactId>
-  <version>y</version>
+  <groupId>com.ntcu.app</groupId>
+  <artifactId>ntcu-project</artifactId>
+  <version>1.0.0</version>
 
   <name>demo</name>
   <!-- FIXME change it to the project's website -->
@@ -69,12 +69,6 @@
             <goals>
               <goal>test</goal>
             </goals>
-          </execution>
-          <execution>
-          <id>snyk-monitor</id>
-          <goals>
-            <goal>monitor</goal>
-          </goals>
           </execution>
         </executions>
         <configuration>
