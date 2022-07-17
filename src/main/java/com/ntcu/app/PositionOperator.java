@@ -1,7 +1,6 @@
 package com.ntcu.app;
 
 import com.github.javaparser.Range;
-import com.github.javaparser.ast.Node;
 
 public class PositionOperator {
 

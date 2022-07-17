@@ -12,8 +12,6 @@ import java.util.regex.Pattern;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import com.github.javaparser.utils.SourceRoot;
-
 public class FileOperator{
 
     private static final String Base_Path = System.getProperty("user.dir") + "\\src\\test\\resources\\";
