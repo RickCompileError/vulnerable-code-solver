@@ -74,16 +74,17 @@ public class SQLInjectionSolver extends Solver{
     private void modifyScopeContent(Expression e, String args){
         VariableDeclarator vd = getVariableDeclarator(e);
         vd.setType("PreparedStatement");
-        MethodCallExpr mce = (MethodCallExpr)(vd.getInitializer().isPresent()
+        MethodCallExpr mce = (MethodCallExpr)(isInitializerExist(vd)
                                             ?vd.getInitializer().get()
-                                            :getAssignExpr(e, "createStatement").getValue());
+                                            :getAssignExpr(e, e.toString()).getValue());
         mce.setName("prepareStatement");
         mce.addArgument(args);
     }
 
     private void modifyArgsContent(Expression e){
-        BinaryExpr be = (getVariableDeclarator(e).getInitializer().isPresent()
-                        ?getVariableDeclarator(e).getInitializer().get()
+        VariableDeclarator node = getVariableDeclarator(e);
+        BinaryExpr be = (isInitializerExist(node)
+                        ?node.getInitializer().get()
                         :getAssignExpr(e, e.toString()).getValue())
                         .toBinaryExpr().get();
 
@@ -99,26 +100,16 @@ public class SQLInjectionSolver extends Solver{
         // get the NodeList from finding BlockStmt and the statement of the occur_node
         NodeList<Statement> nl_s = occur_node.findAncestor(BlockStmt.class).get().getStatements();
         Statement s = occur_node.findAncestor(Statement.class).get();
-        // the statement will add before occur_node statement and the most left first adding
+        // the statement will add before occur_node statement and the adding order in NodeList nl is from left to right 
         int count_expression = 1;
+        // i is index iterator and j is responsible for record the first non-StringLiteralExpr
         for (int i=0, j=0, sz=nl.size();i<sz;i++){
             if (nl.get(i) instanceof StringLiteralExpr){
-                if (i==j){
-                    j++;
-                    continue;
-                }
+                if (i==j) continue;
                 Expression exp = null;
                 if (i-j>1){
-                    BinaryExpr be = new BinaryExpr();
-                    be.setLeft(nl.get(j));
-                    while (j<i){
-                        if (be.getRight()==null){
-                            be.setOperator(ls.get(j-1));
-                            be.setRight(nl.get(j++));
-                        }else{
-                            be = new BinaryExpr(be, nl.get(j), ls.get((j++)-1));
-                        }
-                    }
+                    BinaryExpr be = new BinaryExpr(nl.get(j++),nl.get(j++),ls.get(j-2)); // n1 op1 n2, op1 index is same as n1 index
+                    while (j<i) be = new BinaryExpr(be, nl.get(j), ls.get((j++)-1));
                     exp = be;
                 }
                 else exp = nl.get(j++);
@@ -129,10 +120,10 @@ public class SQLInjectionSolver extends Solver{
                             "setString",
                             new NodeList<Expression>(new IntegerLiteralExpr(String.valueOf(count_expression)),exp)
                         )
-                    ),
-                    s
+                    ), s
                 );
             }
+            else if (nl.get(j) instanceof StringLiteralExpr) j = i;
         }
     }
 

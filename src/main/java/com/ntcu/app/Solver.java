@@ -42,14 +42,24 @@ public abstract class Solver{
         return null;
     }
 
+    /*
+     * This function is used to check if VariableDeclarator has initialize Expression or not
+     * (Note: NullLiteralExpr isn't a initialize Expression)
+     */
+    public static boolean isInitializerExist(Node node){
+        return (node instanceof VariableDeclarator) &&
+                ((VariableDeclarator)node).getInitializer().isPresent() &&
+                !((VariableDeclarator)node).getInitializer().get().isNullLiteralExpr();
+    }
+
+    // Can only accept that the instance of the Node is NameExpr 
     public static AssignExpr getAssignExpr(Node node, String keyword){
-        Printer.printNode(node);
         if (!(node instanceof NameExpr)) return null;
         AssignExpr ae = null;
         while (true){
             // FIXME : the order problem, AssignExpr appear after main node seem to be legal if in ForExpr
             for (AssignExpr i: node.findAll(AssignExpr.class)){
-                if (i.getTarget().toString().contains(keyword)) ae = i;
+                if (i.getTarget().toString().equals(keyword)) ae = i;
             }
             if (ae!=null || !node.getParentNode().isPresent()) break;
             node = node.getParentNode().get();
