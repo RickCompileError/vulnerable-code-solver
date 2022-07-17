@@ -20,7 +20,7 @@ public class JsonReader {
         String content = null;
         try{
             // BUG : different encoding problems
-            content = Files.readString(file_path, StandardCharsets.UTF_8);
+            content = Files.readString(file_path, StandardCharsets.UTF_16);
         }catch (IOException ioe){
             System.out.println(ioe.getStackTrace());
         }
@@ -32,13 +32,15 @@ public class JsonReader {
             public void accept(Object obj){
                 JSONObject jsonobj = (JSONObject)obj;
                 String ruleid = jsonobj.getString("ruleId");
-                Path uri = Path.of(jsonobj.getJSONArray("locations").getJSONObject(0).
-                                        getJSONObject("physicalLocation").getJSONObject("artifactLocation").
-                                        getString("uri"));
+                // Path will be trimmed to relative
+                Path uri = Path.of(file_path.getParent().toString(),
+                                jsonobj.getJSONArray("locations").getJSONObject(0)
+                                .getJSONObject("physicalLocation").getJSONObject("artifactLocation")
+                                .getString("uri"));
                 JSONObject region = jsonobj.getJSONArray("locations").getJSONObject(0).
                                         getJSONObject("physicalLocation").getJSONObject("region");
                 Vulnerable vul = new Vulnerable(ruleid,
-                                                uri.getFileName().toString(),
+                                                uri.toString(),
                                                 region.getInt("startLine"),
                                                 region.getInt("endLine"),
                                                 region.getInt("startColumn"),
