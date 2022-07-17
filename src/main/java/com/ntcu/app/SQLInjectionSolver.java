@@ -1,4 +1,4 @@
-package com.example;
+package com.ntcu.app;
 
 import java.util.ArrayList;
 import java.util.List;

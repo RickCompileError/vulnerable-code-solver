@@ -1,4 +1,4 @@
-package com.example;
+package com.ntcu.app;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
@@ -20,7 +20,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class CodeGenerator {
 
-    private static final String Base_Path = System.getProperty("user.dir") + "/demo/src/main/webapp/";
+    private static final String Base_Path = System.getProperty("user.dir") + "/test/resources";
     
     public static void main(String[] args) {
         CodeGenerator cg = new CodeGenerator();

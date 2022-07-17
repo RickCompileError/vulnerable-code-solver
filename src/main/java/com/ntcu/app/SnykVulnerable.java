@@ -1,4 +1,4 @@
-package com.example;
+package com.ntcu.app;
 
 import java.util.Map;
 import java.util.HashMap;
