@@ -2,4 +2,4 @@
 *.lst
 src/main/webapp/*
 target/*
-src/test/*
+src/test/java
