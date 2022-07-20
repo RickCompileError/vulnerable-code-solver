@@ -77,11 +77,15 @@ public class SQLInjectionSolver extends Solver{
     }
 
     private void modifyArgsContent(Expression e){
-        VariableDeclarator node = getVariableDeclarator(e);
-        BinaryExpr be = (isInitializerExist(node)
-                        ?node.getInitializer().get()
-                        :getAssignExpr(e, e.toString()).getValue())
-                        .toBinaryExpr().get();
+        BinaryExpr be = null;
+        if (e instanceof BinaryExpr) be = e.toBinaryExpr().get();
+        else{
+            VariableDeclarator node = getVariableDeclarator(e);
+            be = (isInitializerExist(node)
+                    ?node.getInitializer().get()
+                    :getAssignExpr(e, e.toString()).getValue())
+                    .toBinaryExpr().get();
+        }
 
         NodeList<Expression> nl = new NodeList<>();
         List<BinaryExpr.Operator> ls = new ArrayList<>();
