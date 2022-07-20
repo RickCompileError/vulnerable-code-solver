@@ -16,6 +16,7 @@ public class CodeGenerator {
     public static void main(String[] args) {
         CodeGenerator cg = new CodeGenerator();
         try{
+            FileOperator.createFixDir();
             List<Path> paths = null;
             if (args.length > 0) paths = FileOperator.getJSON(args);
             else paths = FileOperator.getJSON();
@@ -34,8 +35,8 @@ public class CodeGenerator {
 
         setParser();
 
-        for (Vulnerable v: sv.get("java/Sqli")){
-            FileOperator.removeMatchFile(v.getFilePath());
+        for (Vulnerable v: sv.get("java/Sqli/test")){
+            // FileOperator.removeMatchFile(v.getFilePath());
             System.out.println("Start solving\n\t"+v);
             CompilationUnit cu = StaticJavaParser.parse(new FileInputStream(v.getFilePath()));
             LexicalPreservingPrinter.setup(cu);
