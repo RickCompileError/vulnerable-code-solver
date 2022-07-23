@@ -6,6 +6,12 @@ import com.github.javaparser.printer.lexicalpreservation.LexicalPreservingPrinte
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
+import com.ntcu.app.solver.SQLInjectionSolver;
+import com.ntcu.app.solver.Solver;
+import com.ntcu.app.util.FileOperator;
+import com.ntcu.app.vuln.JsonReader;
+import com.ntcu.app.vuln.SnykVulnerable;
+import com.ntcu.app.vuln.Vulnerable;
 
 import java.io.*;
 import java.nio.file.Path;
@@ -35,6 +41,7 @@ public class CodeGenerator {
 
         setParser();
 
+        // BUG : different type name bug
         for (Vulnerable v: sv.get("java/Sqli/test")){
             // FileOperator.removeMatchFile(v.getFilePath());
             System.out.println("Start solving\n\t"+v);

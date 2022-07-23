@@ -1,4 +1,4 @@
-package com.ntcu.app;
+package com.ntcu.app.solver;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +19,8 @@ import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.Statement;
+import com.ntcu.app.util.Printer;
+import com.ntcu.app.vuln.Vulnerable;
 
 public class SQLInjectionSolver extends Solver{
 
@@ -55,6 +57,8 @@ public class SQLInjectionSolver extends Solver{
             Printer.printError("Can't find Vulnerable Node");
             return;
         }
+        Printer.printNode(occur_node, "\tOccur Vulnerable Code");
+        // TODO : add the solution of the preparestatement type sql injection
         MethodCallExpr occur_method_call = occur_node.findAncestor(MethodCallExpr.class).get();
 
         Expression method_scope = occur_method_call.getScope().get();
@@ -128,16 +132,16 @@ public class SQLInjectionSolver extends Solver{
 
     private void modifySqlRequest(BinaryExpr be, NodeList<Expression> nl, List<BinaryExpr.Operator> ls){
         // replace sql reqeust to '?'
-        // TODO : the processing have a precondition that
-        //        sql instruction is made up of ['String'+'Node'(1:)](1:)+'String'
+        // the processing have a precondition that
+        // sql instruction is made up of ['String'+'Node'(1:)](1:)+'String'
         String newString = "";
         for (int i=0, sz=nl.size();i<sz;i++){
             Expression exp = nl.get(i);
             if (exp instanceof StringLiteralExpr) newString += exp.asStringLiteralExpr().asString();
             else if (i-1>=0 && nl.get(i-1) instanceof StringLiteralExpr) newString += "?";
         }
-        // remove '' ""
-        newString = newString.replaceAll("[\'\"]\\?[\'\"]","?");
+        // remove '' "". In Java, \d \s ... must be written as \\d \\s ...
+        newString = newString.replaceAll("[\'\"]\\s*\\?\\s*[\'\"]","?");
         // setting new string 
         Node sql = be.getParentNode().get();
         if (sql instanceof VariableDeclarator)

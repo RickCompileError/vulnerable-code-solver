@@ -1,11 +1,11 @@
-package com.ntcu.app;
+package com.ntcu.app.util;
 
 import com.github.javaparser.ast.Node;
 
 public class Printer{
 
-    public static <T extends Node> void printNode(T node, String name){
-        if (name!=null) System.out.print(name + " --- ");
+    public static <T extends Node> void printNode(T node, String msg){
+        if (msg!=null) System.out.print(msg + " --- ");
         System.out.println(node.getMetaModel() + " --- " + node.toString());
     }
 

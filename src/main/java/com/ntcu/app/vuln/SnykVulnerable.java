@@ -1,4 +1,4 @@
-package com.ntcu.app;
+package com.ntcu.app.vuln;
 
 import java.util.Map;
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-package com.ntcu.app;
+package com.ntcu.app.vuln;
 
 public class Vulnerable {
 

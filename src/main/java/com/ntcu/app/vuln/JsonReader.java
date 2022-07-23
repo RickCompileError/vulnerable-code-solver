@@ -1,6 +1,5 @@
-package com.ntcu.app;
+package com.ntcu.app.vuln;
 
-import java.util.SortedMap;
 import java.util.function.Consumer;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -10,14 +9,17 @@ import java.nio.file.Path;
 
 import org.json.*;
 
+import com.ntcu.app.util.EncodingSolver;
+
 public class JsonReader {
     public static SnykVulnerable getSnykVulnerable(Path file_path){
         SnykVulnerable sv = new SnykVulnerable();
-        // String content = tryReadString(Path.of(file_path));
         String content = null;
         try{
-            // BUG : different encoding problems
-            content = Files.readString(file_path, StandardCharsets.UTF_16);
+            // snyk code test have a bug leads to JSON encoding in utf-16 and a prefix BOM (JSON can't have BOM)
+            Charset charset = EncodingSolver.getCharset(file_path);
+            EncodingSolver.removeJsonBOM(file_path);
+            content = Files.readString(file_path, charset);
         }catch (IOException ioe){
             System.out.println(ioe.getStackTrace());
         }
@@ -29,13 +31,14 @@ public class JsonReader {
             public void accept(Object obj){
                 JSONObject jsonobj = (JSONObject)obj;
                 String ruleid = jsonobj.getString("ruleId");
-                // Path will be trimmed to relative
+                JSONArray locations = jsonobj.getJSONArray("codeFlows").getJSONObject(0)
+                                        .getJSONArray("threadFlows").getJSONObject(0)
+                                        .getJSONArray("locations");
+                JSONObject physicalLocation = locations.getJSONObject(locations.length()-1)
+                                                .getJSONObject("location").getJSONObject("physicalLocation");
                 Path uri = Path.of(file_path.getParent().toString(),
-                                jsonobj.getJSONArray("locations").getJSONObject(0)
-                                .getJSONObject("physicalLocation").getJSONObject("artifactLocation")
-                                .getString("uri"));
-                JSONObject region = jsonobj.getJSONArray("locations").getJSONObject(0).
-                                        getJSONObject("physicalLocation").getJSONObject("region");
+                                physicalLocation.getJSONObject("artifactLocation").getString("uri"));
+                JSONObject region = physicalLocation.getJSONObject("region");
                 Vulnerable vul = new Vulnerable(ruleid,
                                                 uri.toString(),
                                                 region.getInt("startLine"),
@@ -53,19 +56,4 @@ public class JsonReader {
         return getSnykVulnerable(Path.of(file_path));
     }
 
-    // BUG : the function may not work
-    private static String tryReadString(Path path){
-        SortedMap<String, Charset> charsets = Charset.availableCharsets();
-        for (String i: charsets.keySet()){
-            boolean success = true;
-            String content = null;
-            try {
-                content = Files.readString(path, charsets.get(i));
-            } catch (IOException ioe){
-                success = false;
-            }
-            if (success) return content;
-        }
-        return null;
-    }
 }

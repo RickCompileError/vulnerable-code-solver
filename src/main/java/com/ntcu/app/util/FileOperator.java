@@ -1,4 +1,4 @@
-package com.ntcu.app;
+package com.ntcu.app.util;
 
 import java.io.File;
 import java.io.IOException;

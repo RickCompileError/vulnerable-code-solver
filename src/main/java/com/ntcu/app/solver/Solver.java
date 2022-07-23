@@ -1,4 +1,4 @@
-package com.ntcu.app;
+package com.ntcu.app.solver;
 
 import java.util.Optional;
 
@@ -10,6 +10,7 @@ import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.printer.lexicalpreservation.LexicalPreservingPrinter;
 import com.github.javaparser.resolution.declarations.AssociableToAST;
+import com.ntcu.app.vuln.Vulnerable;
 
 public abstract class Solver{
 

@@ -1,4 +1,4 @@
-package com.ntcu.app;
+package com.ntcu.app.solver;
 
 import java.util.List;
 
