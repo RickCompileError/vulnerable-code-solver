@@ -14,6 +14,7 @@ import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.IntegerLiteralExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.SimpleName;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
@@ -58,76 +59,124 @@ public class SQLInjectionSolver extends Solver{
             return;
         }
         Printer.printNode(occur_node, "\tOccur Vulnerable Code");
-        // TODO : add the solution of the preparestatement type sql injection
         MethodCallExpr occur_method_call = occur_node.findAncestor(MethodCallExpr.class).get();
-
-        Expression method_scope = occur_method_call.getScope().get();
+        Expression statement_expression = occur_method_call.getScope().get();
         // FIXME : argument may not only one
-        Expression method_args = occur_method_call.getArguments().get(0);
-        setStringBeforeStatement(method_scope, method_args);
-        modifyScopeContent(method_scope, method_args.toString());
-        modifyArgsContent(method_args);
-        occur_method_call.remove(method_args);
+        Expression sql_expression = occur_method_call.getArguments().get(0);
+        String statement_type = getVariableDeclarator(statement_expression).getTypeAsString();
+        if (statement_type.equals("Statement"))
+            solveStatement(occur_method_call, statement_expression, sql_expression);
+        else if (statement_type.equals("Connection") || statement_type.equals("CallableStatement"))
+            solvePrepareStatement(occur_method_call, sql_expression);
     }
 
-    private void modifyScopeContent(Expression e, String args){
-        VariableDeclarator vd = getVariableDeclarator(e);
-        vd.setType("PreparedStatement");
-        MethodCallExpr mce = (MethodCallExpr)(isInitializerExist(vd)
-                                            ?vd.getInitializer().get()
-                                            :getAssignExpr(e, e.toString()).getValue());
-        mce.setName("prepareStatement");
-        mce.addArgument(args);
+    private void solveStatement(MethodCallExpr occur_method_call, Expression statement, Expression sql){
+        if (!(sql instanceof BinaryExpr)) setSqlBeforeStatement(statement, sql);
+        modifySql(statement, sql);
+        sql = occur_method_call.getArguments().get(0);
+        setStatementToPreparedStatement(statement, sql.toString());
+        occur_method_call.remove(sql);
     }
 
-    private void modifyArgsContent(Expression e){
+    private void solvePrepareStatement(MethodCallExpr occur_method_call, Expression sql){
+        AssignExpr occur_assign = occur_method_call.findAncestor(AssignExpr.class).get();
         BinaryExpr be = null;
-        if (e instanceof BinaryExpr) be = e.toBinaryExpr().get();
+        if (sql instanceof BinaryExpr) be = sql.toBinaryExpr().get();
         else{
-            VariableDeclarator node = getVariableDeclarator(e);
+            VariableDeclarator node = getVariableDeclarator(sql);
             be = (isInitializerExist(node)
                     ?node.getInitializer().get()
-                    :getAssignExpr(e, e.toString()).getValue())
+                    :getAssignExpr(sql, sql.toString()).getValue())
                     .toBinaryExpr().get();
         }
-
+        // retrieve BinaryExpr content
         NodeList<Expression> nl = new NodeList<>();
         List<BinaryExpr.Operator> ls = new ArrayList<>();
         BinaryExprReader.read(be, nl, ls);
-        addRequestExpr(nl, ls);
+        addRequestExpr(occur_assign.getTarget().toString(), occur_method_call, nl, ls);
+        modifySqlRequest(be, nl, ls);
+    }
+
+    private void setSqlBeforeStatement(Expression statement, Expression sql){
+        ExpressionStmt statement_vd = getVariableDeclarator(statement).findAncestor(ExpressionStmt.class).get();
+        ExpressionStmt sql_vd = getVariableDeclarator(sql).findAncestor(ExpressionStmt.class).get();
+        if (statement_vd.getRange().get().isAfter(sql_vd.getRange().get().begin)) return;
+        Comment comment = null;
+        if (sql_vd.getComment().isPresent()){
+            comment = sql_vd.getComment().get();
+            sql_vd.setComment(null);
+        }
+        Node node = occur_node;
+        while (node.findAncestor(BlockStmt.class).isPresent()){
+            node = node.findAncestor(BlockStmt.class).get();
+            ((BlockStmt)node).remove(sql_vd);
+            if (node.containsWithinRange(statement_vd)) break;
+        }
+        ((BlockStmt)node).getStatements().addBefore(sql_vd, statement_vd);
+        sql_vd.setComment(comment);
+    }
+
+    private void modifySql(Expression statement, Expression sql){
+        // determine the sql type
+        BinaryExpr be = null;
+        if (sql instanceof BinaryExpr) be = sql.toBinaryExpr().get();
+        else{
+            VariableDeclarator node = getVariableDeclarator(sql);
+            be = (isInitializerExist(node)
+                    ?node.getInitializer().get()
+                    :getAssignExpr(sql, sql.toString()).getValue())
+                    .toBinaryExpr().get();
+        }
+        // retrieve BinaryExpr content
+        NodeList<Expression> nl = new NodeList<>();
+        List<BinaryExpr.Operator> ls = new ArrayList<>();
+        BinaryExprReader.read(be, nl, ls);
+        // get the Node at which statement was initialized
+        VariableDeclarator vd = getVariableDeclarator(statement);
+        MethodCallExpr mce = (MethodCallExpr)(isInitializerExist(vd)
+                            ?vd.getInitializer().get()
+                            :getAssignExpr(statement, statement.toString()).getValue());
+        // Modify
+        addRequestExpr(vd.getNameAsString(), mce, nl, ls);
         modifySqlRequest(be, nl, ls);
     }
     
     // add request expression
-    private void addRequestExpr(NodeList<Expression> nl, List<BinaryExpr.Operator> ls){
+    private void addRequestExpr(String statement_name, MethodCallExpr mce, NodeList<Expression> nl, List<BinaryExpr.Operator> ls){
         // get the NodeList from finding BlockStmt and the statement of the occur_node
-        NodeList<Statement> nl_s = occur_node.findAncestor(BlockStmt.class).get().getStatements();
-        Statement s = occur_node.findAncestor(Statement.class).get();
+        NodeList<Statement> nl_s = mce.findAncestor(BlockStmt.class).get().getStatements();
+        Statement s = mce.findAncestor(Statement.class).get();
         // the statement will add before occur_node statement and the adding order in NodeList nl is from left to right 
         int count_expression = 1;
+        NodeList<ExpressionStmt> nl_es = new NodeList();
         // i is index iterator and j is responsible for record the first non-StringLiteralExpr
-        for (int i=0, j=0, sz=nl.size();i<sz;i++){
-            if (nl.get(i) instanceof StringLiteralExpr){
-                if (i==j) continue;
-                Expression exp = null;
-                if (i-j>1){
-                    BinaryExpr be = new BinaryExpr(nl.get(j++),nl.get(j++),ls.get(j-2)); // n1 op1 n2, op1 index is same as n1 index
-                    while (j<i) be = new BinaryExpr(be, nl.get(j), ls.get((j++)-1));
-                    exp = be;
-                }
-                else exp = nl.get(j++);
-                nl_s.addBefore(
-                    new ExpressionStmt(
-                        new MethodCallExpr(
-                            occur_node.findAncestor(MethodCallExpr.class).get().getScope().get(),
-                            "setString",
-                            new NodeList<Expression>(new IntegerLiteralExpr(String.valueOf(count_expression)),exp)
-                        )
-                    ), s
-                );
+        int i = 0, j = 0;
+        while (i<nl.size()){
+            while (i<nl.size() && nl.get(i) instanceof StringLiteralExpr) i++;
+            j = i;
+            while (i<nl.size() && !(nl.get(i) instanceof StringLiteralExpr)) i++;
+            if (j>=nl.size()) break;
+
+            Expression exp = null;
+            if (i-j>=2){
+                // n1 op1 n2, op1 index is same as n1 index
+                BinaryExpr new_be = new BinaryExpr(nl.get(j++),nl.get(j++),ls.get(j-2));
+                while (j<i) new_be = new BinaryExpr(new_be, nl.get(j++), ls.get(j-2));
+                exp = new_be;
             }
-            else if (nl.get(j) instanceof StringLiteralExpr) j = i;
+            else exp = nl.get(j++);
+            nl_es.add(
+                new ExpressionStmt(
+                    new MethodCallExpr(
+                        // occur_node.findAncestor(MethodCallExpr.class).get().getScope().get(),
+                        new NameExpr(statement_name),
+                        "setString",
+                        new NodeList<Expression>(new IntegerLiteralExpr(String.valueOf(count_expression++)),exp)
+                    )
+                )
+            );
         }
+        nl_s.addAll(nl_s.indexOf(s)+1, nl_es);
     }
 
     private void modifySqlRequest(BinaryExpr be, NodeList<Expression> nl, List<BinaryExpr.Operator> ls){
@@ -148,25 +197,20 @@ public class SQLInjectionSolver extends Solver{
             ((VariableDeclarator)sql).setInitializer(new StringLiteralExpr(newString)); 
         else if(sql instanceof AssignExpr)
             ((AssignExpr)sql).setValue(new StringLiteralExpr(newString));
+        else if (sql instanceof MethodCallExpr)
+            ((MethodCallExpr)sql).setArgument(0, new StringLiteralExpr(newString));
     }
 
-    private void setStringBeforeStatement(Expression scope, Expression args){
-        ExpressionStmt scope_vd = getVariableDeclarator(scope).findAncestor(ExpressionStmt.class).get();
-        ExpressionStmt args_vd = getVariableDeclarator(args).findAncestor(ExpressionStmt.class).get();
-        if (scope_vd.getRange().get().isAfter(args_vd.getRange().get().begin)) return;
-        Comment comment = null;
-        if (args_vd.getComment().isPresent()){
-            comment = args_vd.getComment().get();
-            args_vd.setComment(null);
-        }
-        Node node = occur_node;
-        while (node.findAncestor(BlockStmt.class).isPresent()){
-            node = node.findAncestor(BlockStmt.class).get();
-            ((BlockStmt)node).remove(args_vd);
-            if (node.containsWithinRange(scope_vd)) break;
-        }
-        ((BlockStmt)node).getStatements().addBefore(args_vd, scope_vd);
-        args_vd.setComment(comment);
+    private void setStatementToPreparedStatement(Expression statement, String sql){
+        VariableDeclarator vd = getVariableDeclarator(statement);
+        vd.setType("PreparedStatement");
+        MethodCallExpr mce = (MethodCallExpr)(isInitializerExist(vd)
+                                            ?vd.getInitializer().get()
+                                            :getAssignExpr(statement, statement.toString()).getValue());
+        mce.setName("prepareStatement");
+        mce.addArgument(sql);
     }
+
+
 
 }
