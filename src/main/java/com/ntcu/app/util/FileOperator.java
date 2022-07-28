@@ -85,7 +85,7 @@ public class FileOperator{
     public static List<Path> getJSON(String[] args){
         List<Path> paths = new ArrayList<>();
         for (String i: args){
-            if (FileOperator.checkFileExists(i)) paths.add(Path.of(i));
+            if (FileOperator.checkFileExists(i)) paths.add(Path.of(Base_Path, Path.of(i).getFileName().toString()));
             else System.out.println("File [" + i + "] doesn't exist.");
         }
         return paths;
