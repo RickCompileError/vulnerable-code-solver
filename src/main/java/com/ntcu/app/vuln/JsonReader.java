@@ -13,6 +13,7 @@ import com.ntcu.app.util.EncodingSolver;
 
 public class JsonReader {
     public static SnykVulnerable getSnykVulnerable(Path file_path){
+        System.out.println("Start Reading Json File: " + file_path);
         SnykVulnerable sv = new SnykVulnerable();
         String content = null;
         try{
@@ -49,6 +50,7 @@ public class JsonReader {
             }
         };
         parser.forEach(consumer);
+        System.out.println("End Reading Json File: " + file_path);
         return sv;
     }
 
