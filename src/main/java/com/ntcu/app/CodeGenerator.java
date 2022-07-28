@@ -21,14 +21,20 @@ public class CodeGenerator {
 
     public static void main(String[] args) {
         CodeGenerator cg = new CodeGenerator();
+        FileOperator.createFixDir();
+        List<Path> paths = null;
         try{
-            FileOperator.createFixDir();
-            List<Path> paths = null;
             if (args.length > 0) paths = FileOperator.getJSON(args);
             else paths = FileOperator.getJSON();
-            for (Path path: paths) cg.process(path);
         }catch (Exception e){
             e.printStackTrace();
+        }
+        for (Path path: paths){
+            try{
+                cg.process(path);
+            }catch (Exception e){
+                System.out.println("Connot handle file");
+            }
         }
     }
 
@@ -41,8 +47,13 @@ public class CodeGenerator {
 
         setParser();
 
-        // BUG : different type name bug
-        for (Vulnerable v: sv.get("java/Sqli/test")){
+        List<Vulnerable> vul = null;
+        if ((vul=sv.get("java/Sqli")) != null) processVul(vul);
+        if ((vul=sv.get("java/Sqli/test")) != null) processVul(vul);
+    }
+
+    private void processVul(List<Vulnerable> vul) throws Exception{
+        for (Vulnerable v: vul){
             // FileOperator.removeMatchFile(v.getFilePath());
             System.out.println("Start solving\n\t"+v);
             CompilationUnit cu = StaticJavaParser.parse(new FileInputStream(v.getFilePath()));
