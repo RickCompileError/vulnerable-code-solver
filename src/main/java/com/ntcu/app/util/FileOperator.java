@@ -15,7 +15,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class FileOperator{
 
     private static final String Base_Path = System.getProperty("user.dir");
-    private static final String Fix_Path = Base_Path + "\\fix\\";
+    private static final String Fix_Path = Base_Path + "/fix/";
 
     public static String getFileName(String file){
         return Path.of(file).getFileName().toString();
