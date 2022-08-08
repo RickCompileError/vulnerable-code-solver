@@ -58,7 +58,7 @@ public class SQLInjectionSolver extends Solver{
             Printer.printError("Can't find Vulnerable Node");
             return;
         }
-        Printer.printNode(occur_node, "\tOccur Vulnerable Code");
+        // Printer.printNode(occur_node, "\tOccur Vulnerable Code");
         MethodCallExpr occur_method_call = occur_node.findAncestor(MethodCallExpr.class).get();
         Expression statement_expression = occur_method_call.getScope().get();
         // FIXME : argument may not only one

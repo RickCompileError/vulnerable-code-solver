@@ -6,6 +6,7 @@ import com.github.javaparser.printer.lexicalpreservation.LexicalPreservingPrinte
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
+import com.ntcu.app.cmd.CommandOperator;
 import com.ntcu.app.solver.SQLInjectionSolver;
 import com.ntcu.app.solver.Solver;
 import com.ntcu.app.util.FileOperator;
@@ -55,7 +56,8 @@ public class CodeGenerator {
     private void processVul(List<Vulnerable> vul) throws Exception{
         for (Vulnerable v: vul){
             // FileOperator.removeMatchFile(v.getFilePath());
-            System.out.println("Start solving\n\t"+v);
+            System.out.println("---------------------------------------------------------------------------");
+            System.out.println("Start solving\n\n" + v + "\n");
             CompilationUnit cu = StaticJavaParser.parse(new FileInputStream(v.getFilePath()));
             LexicalPreservingPrinter.setup(cu);
 
@@ -63,8 +65,9 @@ public class CodeGenerator {
             solver.findVulnerableNode();
             solver.solve();
 
-            FileOperator.save(v.getFilePath(), LexicalPreservingPrinter.print(cu));
-            System.out.println("Done");
+            String old_dir = v.getFilePath();
+            String new_dir = FileOperator.save(v.getFilePath(), LexicalPreservingPrinter.print(cu));
+            CommandOperator.diff(old_dir, new_dir);
         }
     }
 

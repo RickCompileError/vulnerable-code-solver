@@ -71,7 +71,7 @@ public class FileOperator{
         return Files.exists(Path.of(file));
     }
 
-    public static void save(String file, String output){
+    public static String save(String file, String output){
         int ver = getFileVersionNumber(file);
         String file_name = "n" + String.valueOf(ver) + "_" + getFileName(file);
         Path path = Path.of(Fix_Path + file_name);
@@ -80,6 +80,7 @@ public class FileOperator{
         } catch (IOException ioe){
             ioe.printStackTrace();
         }
+        return path.toString();
     }
 
     public static List<Path> getJSON(String[] args){
