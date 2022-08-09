@@ -6,7 +6,7 @@
 
   <groupId>com.ntcu.app</groupId>
   <artifactId>ntcu-project</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.2</version>
 
   <name>vulnerable-code-solver</name>
   <!-- FIXME change it to the project's website -->
