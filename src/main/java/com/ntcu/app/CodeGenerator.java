@@ -22,7 +22,6 @@ public class CodeGenerator {
 
     public static void main(String[] args) {
         CodeGenerator cg = new CodeGenerator();
-        FileOperator.createFixDir();
         List<Path> paths = null;
         try{
             if (args.length > 0) paths = FileOperator.getJSON(args);
@@ -41,6 +40,7 @@ public class CodeGenerator {
 
     public CodeGenerator(){
         setParser();
+        FileOperator.createFixDir();
     }
 
     public void process(Path path) throws Exception{
@@ -65,9 +65,12 @@ public class CodeGenerator {
             solver.findVulnerableNode();
             solver.solve();
 
+            System.out.println("Start comparing\n");        
             String old_dir = v.getFilePath();
             String new_dir = FileOperator.save(v.getFilePath(), LexicalPreservingPrinter.print(cu));
-            CommandOperator.diff(old_dir, new_dir);
+            // CommandOperator.diff(old_dir, new_dir);
+            CommandOperator.cd();
+            System.out.println("---------------------------------------------------------------------------");
         }
     }
 
