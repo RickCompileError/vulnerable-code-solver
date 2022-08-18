@@ -14,18 +14,17 @@ import com.ntcu.app.vuln.Vulnerable;
 
 public abstract class Solver{
 
-    protected CompilationUnit cu;
-    protected Vulnerable vulnerable;
-    protected Node occur_node;
+    protected CompilationUnit cu = null;
+    protected Vulnerable vulnerable = null;
+    protected Node occur_node = null;
 
-    public Solver(){
-
-    }
+    public Solver(){}
 
     public Solver(Vulnerable vulnerable, CompilationUnit cu){
         this.cu = cu;
         this.vulnerable = vulnerable;
         LexicalPreservingPrinter.setup(cu);
+        findVulnerableNode();
     }
 
     public void setUp(Vulnerable vulnerable, CompilationUnit cu){
@@ -72,6 +71,6 @@ public abstract class Solver{
         return LexicalPreservingPrinter.print(cu); 
     }
 
-    public abstract boolean findVulnerableNode();
+    public abstract void findVulnerableNode();
     public abstract void solve();
 }
