@@ -5,8 +5,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.ntcu.app</groupId>
-  <artifactId>ntcu-project</artifactId>
+  <artifactId>vulnerable-code-solver</artifactId>
   <version>1.0.2</version>
+  <packaging>jar</packaging>
 
   <name>vulnerable-code-solver</name>
   <!-- FIXME change it to the project's website -->
@@ -128,16 +129,6 @@
       </plugin> -->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
-        <configuration>
-          <archive>
-            <manifest>
-              <mainClass>com.ntcu.app.CodeGenerator</mainClass>
-            </manifest>
-          </archive>
-          <descriptorRefs>
-            <descriptorRef>jar-with-dependencies</descriptorRef>
-          </descriptorRefs>
-        </configuration>
         <executions>
           <execution>
             <id>make-assembly</id>
@@ -145,6 +136,16 @@
             <goals>
               <goal>single</goal>
             </goals>
+            <configuration>
+              <archive>
+                <manifest>
+                  <mainClass>com.ntcu.app.CodeGenerator</mainClass>
+                </manifest>
+              </archive>
+              <descriptorRefs>
+                <descriptorRef>jar-with-dependencies</descriptorRef>
+              </descriptorRefs>
+            </configuration>
           </execution>
         </executions>
       </plugin>
