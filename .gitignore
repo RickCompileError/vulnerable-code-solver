@@ -1,6 +1,5 @@
 *.class
 *.lst
-src/main/webapp/*
 target/*
 src/test/java
 fix
