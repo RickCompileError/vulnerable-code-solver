@@ -1,5 +1,7 @@
 *.class
 *.lst
+*.json
+*.dccache
 target/*
 src/test/java
 fix

@@ -33,6 +33,7 @@ public class CodeGenerator {
             try{
                 cg.process(path);
             }catch (Exception e){
+                e.printStackTrace();
                 System.out.println("Connot handle file");
             }
         }
