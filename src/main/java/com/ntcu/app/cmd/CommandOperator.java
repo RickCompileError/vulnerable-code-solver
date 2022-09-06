@@ -7,7 +7,7 @@ public class CommandOperator{
 
     // For Linux 
     public static void diff(String old_dir, String new_dir){   
-        String cmd = "diff -y " + old_dir + " " + new_dir;
+        String cmd = "diff " + old_dir + " " + new_dir;
         System.out.println("old: " + old_dir + "\n" + "new: " + new_dir + "\n");
         System.out.println("Result:\n");
         exec(cmd);
