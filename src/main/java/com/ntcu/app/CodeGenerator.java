@@ -29,13 +29,7 @@ public class CodeGenerator {
         }catch (Exception e){
             e.printStackTrace();
         }
-        for (Path path: paths){
-            try{
-                cg.process(path);
-            }catch (Exception e){
-                System.out.println("Connot handle file");
-            }
-        }
+        for (Path path: paths) cg.process(path);
     }
 
     public CodeGenerator(){
@@ -43,7 +37,7 @@ public class CodeGenerator {
         FileOperator.createFixDir();
     }
 
-    public void process(Path path) throws Exception{
+    public void process(Path path){
         SnykVulnerable sv = JsonReader.getSnykVulnerable(path);
 
         setParser();
@@ -53,23 +47,27 @@ public class CodeGenerator {
         if ((vul=sv.get("java/Sqli/test")) != null) processVul(vul);
     }
 
-    private void processVul(List<Vulnerable> vul) throws Exception{
+    private void processVul(List<Vulnerable> vul){
         for (Vulnerable v: vul){
-            // FileOperator.removeMatchFile(v.getFilePath());
             System.out.println("---------------------------------------------------------------------------");
-            System.out.println("Start solving\n\n" + v + "\n");
-            CompilationUnit cu = StaticJavaParser.parse(new FileInputStream(v.getFilePath()));
-            LexicalPreservingPrinter.setup(cu);
+            try{
+                // FileOperator.removeMatchFile(v.getFilePath());
+                System.out.println("Start solving\n\n" + v + "\n");
+                CompilationUnit cu = StaticJavaParser.parse(new FileInputStream(v.getFilePath()));
+                LexicalPreservingPrinter.setup(cu);
 
-            Solver solver = new SQLInjectionSolver(v, cu);
-            solver.findVulnerableNode();
-            solver.solve();
+                Solver solver = new SQLInjectionSolver(v, cu);
+                solver.findVulnerableNode();
+                solver.solve();
 
-            System.out.println("Start comparing\n");        
-            String old_dir = v.getFilePath();
-            String new_dir = FileOperator.save(v.getFilePath(), LexicalPreservingPrinter.print(cu));
-            // CommandOperator.diff(old_dir, new_dir);
-            CommandOperator.cd();
+                System.out.println("Start comparing\n");        
+                String old_dir = v.getFilePath();
+                String new_dir = FileOperator.save(v.getFilePath(), LexicalPreservingPrinter.print(cu));
+                // CommandOperator.diff(old_dir, new_dir);
+                CommandOperator.cd();
+            } catch (Exception e){
+                System.out.println("Cannot handle this vulnerable [" + v + "]");
+            }
             System.out.println("---------------------------------------------------------------------------");
         }
     }
