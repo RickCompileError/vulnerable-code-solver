@@ -83,9 +83,9 @@ public class FileOperator{
         return path.toString();
     }
 
-    public static List<Path> getJSON(String[] args){
+    public static List<Path> getJSONPath(String[] files){
         List<Path> paths = new ArrayList<>();
-        for (String i: args){
+        for (String i: files){
             if (FileOperator.checkFileExists(i)) paths.add(Path.of(Base_Path, Path.of(i).getFileName().toString()));
             else System.out.println("File [" + i + "] doesn't exist.");
         }
@@ -95,7 +95,7 @@ public class FileOperator{
     /*
      * Get scanning json file by JFileChooser
      */
-    public static List<Path> getJSON(){
+    public static List<Path> getJSONPath(){
         JFileChooser chooser = new JFileChooser();
         chooser.setCurrentDirectory(new File(Base_Path));
         chooser.setFileFilter(new FileNameExtensionFilter("JSON File", "json"));
