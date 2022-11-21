@@ -7,6 +7,7 @@ import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import com.ntcu.app.cmd.CommandOperator;
+import com.ntcu.app.cmd.CommandPrinter;
 import com.ntcu.app.solver.SQLInjectionSolver;
 import com.ntcu.app.solver.Solver;
 import com.ntcu.app.util.FileOperator;
@@ -16,6 +17,7 @@ import com.ntcu.app.vuln.Vulnerable;
 
 import java.io.*;
 import java.nio.file.Path;
+import java.util.Iterator;
 import java.util.List;
 
 public class CodeGenerator {
@@ -23,13 +25,20 @@ public class CodeGenerator {
     public static void main(String[] args) {
         CodeGenerator cg = new CodeGenerator();
         List<Path> paths = null;
+
         try{
-            if (args.length > 0) paths = FileOperator.getJSON(args);
-            else paths = FileOperator.getJSON();
+            if (args.length > 0) paths = FileOperator.getJSONPath(args);
+            else paths = FileOperator.getJSONPath();
         }catch (Exception e){
             e.printStackTrace();
         }
-        for (Path path: paths) cg.process(path);
+
+        if (paths!=null){
+            Iterator<Path> iter = paths.iterator();
+            while (iter.hasNext()){
+                cg.process(iter.next());
+            }
+        }
     }
 
     public CodeGenerator(){
@@ -63,7 +72,8 @@ public class CodeGenerator {
                 System.out.println("Start comparing\n");        
                 String old_dir = v.getFilePath();
                 String new_dir = FileOperator.save(v.getFilePath(), LexicalPreservingPrinter.print(cu));
-                CommandOperator.diff(old_dir, new_dir);
+                CommandPrinter.print(CommandOperator.diff(old_dir, new_dir));
+                // CommandPrinter.print(CommandOperator.cd());
             } catch (Exception e){
                 System.out.println("Cannot handle this vulnerable [" + v + "]");
             }
