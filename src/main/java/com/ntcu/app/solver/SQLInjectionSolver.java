@@ -135,18 +135,19 @@ public class SQLInjectionSolver extends Solver{
         BinaryExprReader.read(sql.asBinaryExpr(), binary_expression, binary_operator);
 
         // create PrepareStatement and move Connection before the sql
-        connection_declare.findAncestor(ExpressionStmt.class).get().remove();
-        if (connection_assign!=null) connection_assign.findAncestor(ExpressionStmt.class).get().remove();
+        // connection_declare.findAncestor(ExpressionStmt.class).get().remove();
+        // if (connection_assign!=null) connection_assign.findAncestor(ExpressionStmt.class).get().remove();
         NodeList<Statement> sql_belong_block = sql_declare.findAncestor(BlockStmt.class).get().getStatements();
         NodeList<Statement> add_list = new NodeList<>();
-        add_list.add(connection_declare.findAncestor(ExpressionStmt.class).get());
-        if (connection_assign!=null) add_list.add(connection_assign.findAncestor(ExpressionStmt.class).get());
+        // add_list.add(connection_declare.findAncestor(ExpressionStmt.class).get());
+        // if (connection_assign!=null) add_list.add(connection_assign.findAncestor(ExpressionStmt.class).get());
         add_list.add(new ExpressionStmt(getPrepareStatement()));
         sql_belong_block.addAll(sql_belong_block.indexOf(sql_declare.findAncestor(ExpressionStmt.class).get()), add_list);
 
         // adjust "sql = String + Operator + String..."
         adjustSql(sql, binary_expression, binary_operator, sql_expression);
-        sql = (sql_assign==null?sql_declare.getInitializer().get():sql_assign.getValue()); // Due to function adjustSql(), variable sql need to reassign
+        // Due to function adjustSql(), variable sql need to reassign
+        sql = (sql_assign==null?sql_declare.getInitializer().get():sql_assign.getValue());
 
         // add "solve_stmt = conn.prepareStatement(sql)"
         sql.findAncestor(BlockStmt.class).get().getStatements().
