@@ -72,7 +72,7 @@ public class CodeGenerator {
                 System.out.println("Start comparing\n");        
                 String old_dir = v.getFilePath();
                 String new_dir = FileOperator.save(v.getFilePath(), LexicalPreservingPrinter.print(cu));
-                CommandPrinter.print(CommandOperator.diff(old_dir, new_dir));
+                CommandPrinter.print(CommandOperator.diffColor(old_dir, new_dir));
                 // CommandPrinter.print(CommandOperator.cd());
             } catch (Exception e){
                 System.out.println("Cannot handle this vulnerable [" + v + "]");
