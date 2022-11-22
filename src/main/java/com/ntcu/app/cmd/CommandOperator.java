@@ -23,6 +23,9 @@ public class CommandOperator{
     // For Linux, Snyk scanning vulnerability
     public static InputStream snykCodeTest(){
         String cmd = "snyk code test --json";
+        cmd = "chmod +x snyk_code_test.sh";
+        exec(cmd);
+        cmd = "./snyk_code_test.sh";
         return exec(cmd);
     }
 
