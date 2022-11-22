@@ -21,26 +21,26 @@ import java.util.Iterator;
 import java.util.List;
 
 public class CodeGenerator {
-
+//test = $(snyk code test --json > CodeVuln.json)
     public static void main(String[] args) {
         CodeGenerator cg = new CodeGenerator();
-        InputStream is = CommandOperator.snykCodeTest();
-        CommandPrinter.print(is);
-    //     List<Path> paths = null;
+        CommandOperator.snykCodeTest();
+        List<Path> paths = null;
 
-    //     try{
-    //         if (args.length > 0) paths = FileOperator.getJSONPath(args);
-    //         else paths = FileOperator.getJSONPath();
-    //     }catch (Exception e){
-    //         e.printStackTrace();
-    //     }
+        args = new String[]{"vuln.json"};
+        try{
+            if (args.length > 0) paths = FileOperator.getJSONPath(args);
+            else paths = FileOperator.getJSONPath();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
 
-    //     if (paths!=null){
-    //         Iterator<Path> iter = paths.iterator();
-    //         while (iter.hasNext()){
-    //             cg.process(iter.next());
-    //         }
-    //     }
+        if (paths!=null){
+            Iterator<Path> iter = paths.iterator();
+            while (iter.hasNext()){
+                cg.process(iter.next());
+            }
+        }
     }
 
     public CodeGenerator(){
