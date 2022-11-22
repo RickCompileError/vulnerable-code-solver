@@ -24,21 +24,23 @@ public class CodeGenerator {
 
     public static void main(String[] args) {
         CodeGenerator cg = new CodeGenerator();
-        List<Path> paths = null;
+        InputStream is = CommandOperator.snykCodeTest();
+        CommandPrinter.print(is);
+    //     List<Path> paths = null;
 
-        try{
-            if (args.length > 0) paths = FileOperator.getJSONPath(args);
-            else paths = FileOperator.getJSONPath();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+    //     try{
+    //         if (args.length > 0) paths = FileOperator.getJSONPath(args);
+    //         else paths = FileOperator.getJSONPath();
+    //     }catch (Exception e){
+    //         e.printStackTrace();
+    //     }
 
-        if (paths!=null){
-            Iterator<Path> iter = paths.iterator();
-            while (iter.hasNext()){
-                cg.process(iter.next());
-            }
-        }
+    //     if (paths!=null){
+    //         Iterator<Path> iter = paths.iterator();
+    //         while (iter.hasNext()){
+    //             cg.process(iter.next());
+    //         }
+    //     }
     }
 
     public CodeGenerator(){
