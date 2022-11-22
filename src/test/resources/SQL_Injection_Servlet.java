@@ -104,7 +104,7 @@ public class SQL_Injection_Servlet extends HttpServlet {
 	        try {
 		        //creating PreparedStatement object to execute query
 	        	Statement st = conn.createStatement();
-	        	String sql = "select * from chi.emp where ename = '" + request.getParameter("nametextbox2").toUpperCase() + "'"; 
+	        	String sql = "select * from chi.emp where ename = '" + request.getParameter("nametextbox2").toUpperCase() + "'";
 		        ResultSet result = st.executeQuery(sql); 
 		        ResultSetMetaData rsmd = result.getMetaData();
 		       		        System.out.println(sql);
