@@ -1,41 +1,32 @@
 package com.ntcu.app;
 
 import java.util.List;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.nio.file.Path;
+import java.util.Iterator;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 
-@Mojo(name = "first-demo", defaultPhase = LifecyclePhase.COMPILE)
+import com.ntcu.app.cmd.CommandOperator;
+import com.ntcu.app.util.FileOperator;
+
+@Mojo(name = "generate", defaultPhase = LifecyclePhase.COMPILE)
 public class MyMojo extends AbstractMojo
 {
-    public static <T> List<T> castList(Class <? extends T> clazz, Collection<?> c){
-        List<T> l = new ArrayList<T>(c.size());
-        for (Object o: c)
-            l.add(clazz.cast(o));
-        return l;
-    }
-
     public void execute() throws MojoExecutionException{
         CodeGenerator cg = new CodeGenerator();
+        CommandOperator.snykCodeTest();
+        List<Path> paths = null;
 
-        // List<Path> paths = null;
+        paths = FileOperator.getJSONPath(new String[]{"vuln.json"});
 
-        // try{
-        //     if (args.length > 0) paths = FileOperator.getJSONPath(args);
-        //     else paths = FileOperator.getJSONPath();
-        // }catch (Exception e){
-        //     e.printStackTrace();
-        // }
-
-        // if (paths!=null){
-        //     Iterator<Path> iter = paths.iterator();
-        //     while (iter.hasNext()){
-        //         cg.process(iter.next());
-        //     }
-        // }
+        if (paths!=null){
+            Iterator<Path> iter = paths.iterator();
+            while (iter.hasNext()){
+                cg.process(iter.next());
+            }
+        }
     }
 }
