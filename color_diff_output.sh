@@ -24,9 +24,22 @@ while IFS= read -r line; do
         continue
     fi
     if [[ $counter -ge 2  &&  $color == "red" ]] ; then
-        printf "\e[91m$line\e[0m\n"
+        if [[ $line == !\ * ]] ; then
+            printf "\e[106m$line\e[0m\n"
+        elif [[ $line == -\ * ]] ; then
+            printf "\e[101m$line\e[0m\n"
+        else
+            printf "\e[91m$line\e[0m\n"
+        fi
     fi
     if [[ $counter -ge 2  &&  $color == "green" ]] ; then
-        printf "\e[32m$line\e[0m\n"
+        if [[ $line == !\ * ]] ; then
+            printf "\e[106m$line\e[0m\n"
+        elif [[ $line == +\ * ]] ; then
+            printf "\e[102m$line\e[0m\n"
+        else
+            printf "\e[32m$line\e[0m\n"
+        fi
     fi
+
 done < "$filename"
