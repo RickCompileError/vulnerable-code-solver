@@ -21,21 +21,6 @@ import java.util.Iterator;
 import java.util.List;
 
 public class CodeGenerator {
-//test = $(snyk code test --json > CodeVuln.json)
-    public static void main(String[] args) {
-        CodeGenerator cg = new CodeGenerator();
-        CommandOperator.snykCodeTest();
-        List<Path> paths = null;
-
-        paths = FileOperator.getJSONPath(new String[]{"vuln.json"});
-
-        if (paths!=null){
-            Iterator<Path> iter = paths.iterator();
-            while (iter.hasNext()){
-                cg.process(iter.next());
-            }
-        }
-    }
 
     public CodeGenerator(){
         setParser();
