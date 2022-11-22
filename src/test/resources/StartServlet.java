@@ -53,7 +53,7 @@ public class StartServlet extends HttpServlet {
             out.println("<title>Servlet userCheck</title>");
             out.println("</head>");
             out.println("<body>");
-            String user = request.getParameter("user"); //snyk 1
+            String user = request.getParameter("user");
 
             System.out.println("MySQL Connect Example.");
             Connection conn = null;
@@ -68,7 +68,7 @@ public class StartServlet extends HttpServlet {
                 System.out.println("Connected to the database");
 
                 Statement st = conn.createStatement();
-                String query = "SELECT * FROM  User where userid='" + user + "'";  //snyk 2
+                String query = "SELECT * FROM  User where userid='" + user + "'";
                 out.println("Query : " + query);
 
                 // PreparedStatement
@@ -77,7 +77,7 @@ public class StartServlet extends HttpServlet {
                 // preparedStatement.setString(1, user);
 
                 System.out.printf(query);
-                ResultSet res = st.executeQuery(query);  //snyk 3
+                ResultSet res = st.executeQuery(query);
 
                 // ResultSet res = preparedStatement.executeQuery();
                 out.println("<br/><br/>Results");

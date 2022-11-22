@@ -20,6 +20,14 @@ public class CommandOperator{
         return exec(cmd);
     }
 
+    // For Linux, Snyk scanning vulnerability
+    public static InputStream snykCodeTest(){
+        String cmd = "chmod +x snyk_code_test.sh";
+        exec(cmd);
+        cmd = "./snyk_code_test.sh";
+        return exec(cmd);
+    }
+
     // For Windows, show current directory
     public static InputStream dir(){
         String cmd = "cmd /c dir";
