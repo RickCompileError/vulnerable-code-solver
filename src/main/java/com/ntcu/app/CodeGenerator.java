@@ -27,13 +27,7 @@ public class CodeGenerator {
         CommandOperator.snykCodeTest();
         List<Path> paths = null;
 
-        args = new String[]{"vuln.json"};
-        try{
-            if (args.length > 0) paths = FileOperator.getJSONPath(args);
-            else paths = FileOperator.getJSONPath();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+        paths = FileOperator.getJSONPath(new String[]{"vuln.json"});
 
         if (paths!=null){
             Iterator<Path> iter = paths.iterator();
