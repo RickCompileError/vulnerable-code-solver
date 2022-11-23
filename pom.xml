@@ -7,7 +7,7 @@
   <groupId>com.ntcu.app</groupId>
   <artifactId>vulnerable-code-solver</artifactId>
   <version>1.0.2</version>
-  <packaging>jar</packaging>
+  <packaging>maven-plugin</packaging>
 
   <name>vulnerable-code-solver</name>
   <url>https://github.com/RickCompileError/vulnerable-code-solver</url>
