@@ -15,9 +15,9 @@ public class CommandOperator{
         String cmd = "diff -c " + old_dir + " " + new_dir;
         CommandPrinter.save(exec(cmd), "diff.txt");
         CommandPrinter.colorPrint();
-        //cmd = "chmod +x color_diff_output.sh";
-        //exec(cmd);
-        //cmd = "./color_diff_output.sh";
+        cmd = "chmod +x color_diff_output.sh";
+        exec(cmd);
+        cmd = "./color_diff_output.sh";
         return exec(cmd);
     }
 
