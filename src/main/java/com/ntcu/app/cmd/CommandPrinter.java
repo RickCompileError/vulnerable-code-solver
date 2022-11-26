@@ -39,4 +39,29 @@ public class CommandPrinter{
         }
     }
 
+    public static void createSnykSH(){
+        try{
+            File f = new File("snyk.sh");
+            FileWriter mywriter = new FileWriter(f);
+            String cmd = "#!/bin/bash\n\nsnyk code test";
+            mywriter.write(cmd);
+            mywriter.close();
+        }
+        catch(Exception e){
+            e.printStackTrace(System.err);
+        }
+    }
+
+    public static void createSnykCodeTestSH(){
+        try{
+            File f = new File("snyk_code_test.sh");
+            FileWriter mywriter = new FileWriter(f);
+            String cmd = "#!/bin/bash\n\nsnyk code test --json > \"vuln.json\"";
+            mywriter.write(cmd);
+            mywriter.close();
+        }
+        catch(Exception e){
+            e.printStackTrace(System.err);
+        }
+    }
 }
