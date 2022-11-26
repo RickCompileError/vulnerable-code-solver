@@ -51,40 +51,40 @@ public class CommandPrinter{
                         "#While loop to read line by line\n"+
                         "while IFS= read -r line; do\n"+
                         "    if [[ $counter -lt 2 ]] ; then\n"+
-                        "        printf \"\e[36m$line\e[0m\n\"\n"+
+                        "        printf \"\\e[36m$line\\e[0m\n\"\n"+
                         "        counter=$((counter+1))\n"+
                         "        continue\n"+
                         "    fi\n"+
-                        "    if [[ $counter -ge 2  &&  $line == \*\*\*\** ]] ; then\n"+
-                        "        printf \"\e[30m$line\e[0m\n\"\n"+
+                        "    if [[ $counter -ge 2  &&  $line == \\*\\*\\*\\** ]] ; then\n"+
+                        "        printf \"\\e[30m$line\\e[0m\n\"\n"+
                         "        continue\n"+
                         "    fi\n"+
-                        "    if [[ $counter -ge 2  &&  $line == \*\*\*\ * ]] ; then\n"+
-                        "        printf \"\e[35m$line\e[0m\n\"\n"+
+                        "    if [[ $counter -ge 2  &&  $line == \\*\\*\\*\\ * ]] ; then\n"+
+                        "        printf \"\\e[35m$line\\e[0m\n\"\n"+
                         "        color=\"red\"\n"+
                         "        continue\n"+
                         "    fi\n"+
-                        "    if [[ $counter -ge 2  &&  $line == ---\ * ]] ; then\n"+
-                        "        printf \"\e[35m$line\e[0m\n\"\n"+
+                        "    if [[ $counter -ge 2  &&  $line == ---\\ * ]] ; then\n"+
+                        "        printf \"\\e[35m$line\\e[0m\n\"\n"+
                         "        color=\"green\"\n"+
                         "        continue\n"+
                         "    fi\n"+
                         "    if [[ $counter -ge 2  &&  $color == \"red\" ]] ; then\n"+
-                        "        if [[ $line == !\ * ]] ; then\n"+
-                        "            printf \"\e[106m$line\e[0m\n\"\n"+
-                        "        elif [[ $line == -\ * ]] ; then\n"+
-                        "            printf \"\e[101m$line\e[0m\n\"\n"+
+                        "        if [[ $line == !\\ * ]] ; then\n"+
+                        "            printf \"\\e[106m$line\\e[0m\n\"\n"+
+                        "        elif [[ $line == -\\ * ]] ; then\n"+
+                        "            printf \"\\e[101m$line\\e[0m\n\"\n"+
                         "        else\n"+
-                        "            printf \"\e[91m$line\e[0m\n\"\n"+
+                        "            printf \"\\e[91m$line\\e[0m\n\"\n"+
                         "        fi\n"+
                         "    fi\n"+
                         "    if [[ $counter -ge 2  &&  $color == \"green\" ]] ; then\n"+
-                        "        if [[ $line == !\ * ]] ; then\n"+
-                        "            printf \"\e[106m$line\e[0m\n\"\n"+
-                        "        elif [[ $line == +\ * ]] ; then\n"+
-                        "            printf \"\e[102m$line\e[0m\n\"\n"+
+                        "        if [[ $line == !\\ * ]] ; then\n"+
+                        "            printf \"\\e[106m$line\\e[0m\n\"\n"+
+                        "        elif [[ $line == +\\ * ]] ; then\n"+
+                        "            printf \"\\e[102m$line\\e[0m\n\"\n"+
                         "        else\n"+
-                        "            printf \"\e[32m$line\e[0m\n\"\n"+
+                        "            printf \"\\e[32m$line\\e[0m\n\"\n"+
                         "        fi\n"+
                         "    fi\n"+
                         "done < \"$filename\"\n"
