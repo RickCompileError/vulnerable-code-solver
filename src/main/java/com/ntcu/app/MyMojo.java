@@ -11,6 +11,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 
 import com.ntcu.app.cmd.CommandOperator;
 import com.ntcu.app.util.FileOperator;
+import com.ntcu.app.cmd.CommandPrinter;
 
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.COMPILE)
 public class MyMojo extends AbstractMojo
