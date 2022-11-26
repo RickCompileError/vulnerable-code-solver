@@ -10,35 +10,35 @@ while IFS= read -r line; do
         continue
     fi
     if [[ $counter -ge 2  &&  $line == \*\*\*\** ]] ; then
-        printf "\e[30m$line\e[0m\n"
+        printf "aaaaaaa\e[30m$line\e[0m\n"
         continue
     fi
     if [[ $counter -ge 2  &&  $line == \*\*\*\ * ]] ; then
-        printf "\e[35m$line\e[0m\n"
+        printf "bbbbbbb\e[35m$line\e[0m\n"
         color="red"
         continue
     fi
     if [[ $counter -ge 2  &&  $line == ---\ * ]] ; then
-        printf "\e[35m$line\e[0m\n"
+        printf "ccccccc\e[35m$line\e[0m\n"
         color="green"
         continue
     fi
     if [[ $counter -ge 2  &&  $color == "red" ]] ; then
         if [[ $line == !\ * ]] ; then
-            printf "\e[106m$line\e[0m\n"
+            printf "dddddd\e[106m$line\e[0m\n"
         elif [[ $line == -\ * ]] ; then
-            printf "\e[101m$line\e[0m\n"
+            printf "eeeeeee\e[101m$line\e[0m\n"
         else
-            printf "\e[91m$line\e[0m\n"
+            printf "fffffff\e[91m$line\e[0m\n"
         fi
     fi
     if [[ $counter -ge 2  &&  $color == "green" ]] ; then
         if [[ $line == !\ * ]] ; then
-            printf "\e[106m$line\e[0m\n"
+            printf "ggggggg\e[106m$line\e[0m\n"
         elif [[ $line == +\ * ]] ; then
-            printf "\e[102m$line\e[0m\n"
+            printf "hhhhhhh\e[102m$line\e[0m\n"
         else
-            printf "\e[32m$line\e[0m\n"
+            printf "iiiiiii\e[32m$line\e[0m\n"
         fi
     fi
 
