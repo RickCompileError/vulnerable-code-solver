@@ -87,7 +87,7 @@ public class CommandPrinter{
                         "            printf \"\\e[32m$line\\e[0m\n\"\n"+
                         "        fi\n"+
                         "    fi\n"+
-                        "done < \"$filename\"\n"
+                        "done < \"$filename\"\n";
             mywriter.write(cmd);
             mywriter.close();
         }
