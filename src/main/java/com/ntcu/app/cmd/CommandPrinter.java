@@ -48,45 +48,45 @@ public class CommandPrinter{
             BufferedReader reader = new BufferedReader(new FileReader(f));
             String line = null;
             String color = null;
-            System.out.println("\\e[36m"+reader.readLine()+"\\e[0m");
-            System.out.println("\\e[36m"+reader.readLine()+"\\e[0m");
+            System.out.println("\\033[36m"+reader.readLine()+"\\033[0m");
+            System.out.println("\\033[36m"+reader.readLine()+"\\033[0m");
             while (true){
                 line = reader.readLine();
                 if (line==null) break;
                 if (line.matches("\\*\\*\\*\\*.*")){
-                    System.out.println("\\e[30m"+line+"\\e[0m");
+                    System.out.println("\\033[30m"+line+"\\033[0m");
                     continue;
                 }
                 if (line.matches("\\*\\*\\* .*")){
-                    System.out.println("\\e[35m"+line+"\\e[0m");
+                    System.out.println("\\033[35m"+line+"\\033[0m");
                     color = "red";
                     continue;
                 }
                 if (line.matches("--- .*")){
-                    System.out.println("\\e[35m"+line+"\\e[0m");
+                    System.out.println("\\033[35m"+line+"\\033[0m");
                     color = "green";
                     continue;
                 }
                 if (color=="red"){
                     if (line.matches("! .*")){
-                        System.out.println("\\e[106m"+line+"\\e[0m");
+                        System.out.println("\\033[106m"+line+"\\033[0m");
                     }
                     else if (line.matches("- .*")){
-                        System.out.println("\\e[101m"+line+"\\e[0m");
+                        System.out.println("\\033[101m"+line+"\\033[0m");
                     }
                     else{
-                        System.out.println("\\e[91m"+line+"\\e[0m");
+                        System.out.println("\\033[91m"+line+"\\033[0m");
                     }
                 }
                 if (color=="green"){
                     if (line.matches("! .*")){
-                        System.out.println("\\e[106m"+line+"\\e[0m");
+                        System.out.println("\\033[106m"+line+"\\033[0m");
                     }
                     else if (line.matches("- .*")){
-                        System.out.println("\\e[102m"+line+"\\e[0m");
+                        System.out.println("\\033[102m"+line+"\\033[0m");
                     }
                     else{
-                        System.out.println("\\e[32m"+line+"\\e[0m");
+                        System.out.println("\\033[32m"+line+"\\033[0m");
                     }
                 }
             }
