@@ -17,6 +17,7 @@ public class MyMojo extends AbstractMojo
 {
     public void execute() throws MojoExecutionException{
         CodeGenerator cg = new CodeGenerator();
+        CommandPrinter.print(CommandOperator.snyk());
         CommandOperator.snykCodeTest();
         List<Path> paths = null;
 
