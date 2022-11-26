@@ -14,6 +14,7 @@ public class CommandOperator{
     public static InputStream diffColor(String old_dir, String new_dir){
         String cmd = "diff -c " + old_dir + " " + new_dir;
         CommandPrinter.save(exec(cmd), "diff.txt");
+        CommandPrinter.colorPrint();
         cmd = "chmod +x color_diff_output.sh";
         exec(cmd);
         cmd = "./color_diff_output.sh";
