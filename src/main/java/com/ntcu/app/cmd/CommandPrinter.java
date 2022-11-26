@@ -99,7 +99,7 @@ public class CommandPrinter{
     public static void createSnykSH(){
         try{
             File f = new File("snyk.sh");
-            system.out.println(f.getAbsolutePath());
+            System.out.println(f.getAbsolutePath());
             FileWriter mywriter = new FileWriter(f);
             String cmd = "#!/bin/bash\n\nsnyk code test";
             mywriter.write(cmd);
