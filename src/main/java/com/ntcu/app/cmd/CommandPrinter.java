@@ -42,64 +42,63 @@ public class CommandPrinter{
     }
 
     public static void colorPrint(){
-        String file_name = "diff.txt";
-        File f = new File(file_name);
         try{
-            BufferedReader reader = new BufferedReader(new FileReader(f));
-            String line = null;
-            String color = null;
-            System.out.println("\\033[36m"+reader.readLine()+"\\033[0m");
-            System.out.println("\\033[36m"+reader.readLine()+"\\033[0m");
-            while (true){
-                line = reader.readLine();
-                if (line==null) break;
-                if (line.matches("\\*\\*\\*\\*.*")){
-                    System.out.println("\\033[30m"+line+"\\033[0m");
-                    continue;
-                }
-                if (line.matches("\\*\\*\\* .*")){
-                    System.out.println("\\033[35m"+line+"\\033[0m");
-                    color = "red";
-                    continue;
-                }
-                if (line.matches("--- .*")){
-                    System.out.println("\\033[35m"+line+"\\033[0m");
-                    color = "green";
-                    continue;
-                }
-                if (color=="red"){
-                    if (line.matches("! .*")){
-                        System.out.println("\\033[106m"+line+"\\033[0m");
-                    }
-                    else if (line.matches("- .*")){
-                        System.out.println("\\033[101m"+line+"\\033[0m");
-                    }
-                    else{
-                        System.out.println("\\033[91m"+line+"\\033[0m");
-                    }
-                }
-                if (color=="green"){
-                    if (line.matches("! .*")){
-                        System.out.println("\\033[106m"+line+"\\033[0m");
-                    }
-                    else if (line.matches("- .*")){
-                        System.out.println("\\033[102m"+line+"\\033[0m");
-                    }
-                    else{
-                        System.out.println("\\033[32m"+line+"\\033[0m");
-                    }
-                }
-            }
-            reader.close();
-        } catch (IOException ioe){
-            ioe.printStackTrace();
+            File f = new File("color_diff_output.sh");
+            FileWriter mywriter = new FileWriter(f);
+            String cmd ="#!/bin/bash\n"+
+                        "filename=\"diff.txt\"\n"+
+                        "counter=0\n"+
+                        "#While loop to read line by line\n"+
+                        "while IFS= read -r line; do\n"+
+                        "    if [[ $counter -lt 2 ]] ; then\n"+
+                        "        printf \"\e[36m$line\e[0m\n\"\n"+
+                        "        counter=$((counter+1))\n"+
+                        "        continue\n"+
+                        "    fi\n"+
+                        "    if [[ $counter -ge 2  &&  $line == \*\*\*\** ]] ; then\n"+
+                        "        printf \"\e[30m$line\e[0m\n\"\n"+
+                        "        continue\n"+
+                        "    fi\n"+
+                        "    if [[ $counter -ge 2  &&  $line == \*\*\*\ * ]] ; then\n"+
+                        "        printf \"\e[35m$line\e[0m\n\"\n"+
+                        "        color=\"red\"\n"+
+                        "        continue\n"+
+                        "    fi\n"+
+                        "    if [[ $counter -ge 2  &&  $line == ---\ * ]] ; then\n"+
+                        "        printf \"\e[35m$line\e[0m\n\"\n"+
+                        "        color=\"green\"\n"+
+                        "        continue\n"+
+                        "    fi\n"+
+                        "    if [[ $counter -ge 2  &&  $color == \"red\" ]] ; then\n"+
+                        "        if [[ $line == !\ * ]] ; then\n"+
+                        "            printf \"\e[106m$line\e[0m\n\"\n"+
+                        "        elif [[ $line == -\ * ]] ; then\n"+
+                        "            printf \"\e[101m$line\e[0m\n\"\n"+
+                        "        else\n"+
+                        "            printf \"\e[91m$line\e[0m\n\"\n"+
+                        "        fi\n"+
+                        "    fi\n"+
+                        "    if [[ $counter -ge 2  &&  $color == \"green\" ]] ; then\n"+
+                        "        if [[ $line == !\ * ]] ; then\n"+
+                        "            printf \"\e[106m$line\e[0m\n\"\n"+
+                        "        elif [[ $line == +\ * ]] ; then\n"+
+                        "            printf \"\e[102m$line\e[0m\n\"\n"+
+                        "        else\n"+
+                        "            printf \"\e[32m$line\e[0m\n\"\n"+
+                        "        fi\n"+
+                        "    fi\n"+
+                        "done < \"$filename\"\n"
+            mywriter.write(cmd);
+            mywriter.close();
+        }
+        catch(Exception e){
+            e.printStackTrace(System.err);
         }
     }
 
     public static void createSnykSH(){
         try{
             File f = new File("snyk.sh");
-            System.out.println(f.getAbsolutePath());
             FileWriter mywriter = new FileWriter(f);
             String cmd = "#!/bin/bash\n\nsnyk code test";
             mywriter.write(cmd);
