@@ -78,10 +78,10 @@ public class SQLInjectionSolver extends Solver{
         }
 
         if (scope_type.equals("Statement")) handleStatement(occur_method_call, scope_expression, sql_expression); // st.executeQuery(sql)
-        if (scope_type.equals("Connection")) handlePrepareStatement(occur_method_call, sql_expression); // conn.prepareStatement(sql)
+        if (scope_type.equals("Connection")) handlePreparedStatement(occur_method_call, sql_expression); // conn.prepareStatement(sql)
     }
 
-    private void handlePrepareStatement(MethodCallExpr occur_method_call, Expression sql_expression){
+    private void handlePreparedStatement(MethodCallExpr occur_method_call, Expression sql_expression){
         VariableDeclarator sql_declare = null;
         AssignExpr sql_assign = null;
         Expression sql = null;
@@ -134,14 +134,14 @@ public class SQLInjectionSolver extends Solver{
         sql = (sql_assign==null?sql_declare.getInitializer().get():sql_assign.getValue());
         BinaryExprReader.read(sql.asBinaryExpr(), binary_expression, binary_operator);
 
-        // create PrepareStatement and move Connection before the sql
+        // create PreparedStatement and move Connection before the sql
         // connection_declare.findAncestor(ExpressionStmt.class).get().remove();
         // if (connection_assign!=null) connection_assign.findAncestor(ExpressionStmt.class).get().remove();
         NodeList<Statement> sql_belong_block = sql_declare.findAncestor(BlockStmt.class).get().getStatements();
         NodeList<Statement> add_list = new NodeList<>();
         // add_list.add(connection_declare.findAncestor(ExpressionStmt.class).get());
         // if (connection_assign!=null) add_list.add(connection_assign.findAncestor(ExpressionStmt.class).get());
-        add_list.add(new ExpressionStmt(getPrepareStatement()));
+        add_list.add(new ExpressionStmt(getPreparedStatement()));
         sql_belong_block.addAll(sql_belong_block.indexOf(sql_declare.findAncestor(ExpressionStmt.class).get()), add_list);
 
         // adjust "sql = String + Operator + String..."
@@ -214,8 +214,8 @@ public class SQLInjectionSolver extends Solver{
         return new VariableDeclarationExpr(vd);
     }
 
-    private VariableDeclarationExpr getPrepareStatement(){
-        VariableDeclarator vd = new VariableDeclarator(new ClassOrInterfaceType(null, "PrepareStatement"), "solve_stmt", new NullLiteralExpr());
+    private VariableDeclarationExpr getPreparedStatement(){
+        VariableDeclarator vd = new VariableDeclarator(new ClassOrInterfaceType(null, "PreparedStatement"), "solve_stmt", new NullLiteralExpr());
         return new VariableDeclarationExpr(vd);
     }
 
@@ -254,7 +254,7 @@ public class SQLInjectionSolver extends Solver{
         if (statement_type.equals("Statement"))
             solveStatement(occur_method_call, statement_expression, sql_expression);
         else if (statement_type.equals("Connection") || statement_type.equals("CallableStatement"))
-            solvePrepareStatement(occur_method_call, sql_expression);
+            solvePreparedStatement(occur_method_call, sql_expression);
     }
 
     private void solveStatement(MethodCallExpr occur_method_call, Expression statement, Expression sql){
@@ -265,7 +265,7 @@ public class SQLInjectionSolver extends Solver{
         occur_method_call.remove(sql);
     }
 
-    private void solvePrepareStatement(MethodCallExpr occur_method_call, Expression sql){
+    private void solvePreparedStatement(MethodCallExpr occur_method_call, Expression sql){
         AssignExpr occur_assign = occur_method_call.findAncestor(AssignExpr.class).get();
         BinaryExpr be = null;
         if (sql instanceof BinaryExpr) be = sql.toBinaryExpr().get();
